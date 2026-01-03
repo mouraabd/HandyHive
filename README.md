@@ -50,7 +50,8 @@ spring.datasource.username=root
 spring.datasource.password=YOUR_PASSWORD
 spring.jpa.hibernate.ddl-auto=update
 ```
-3. Initialize Data (Required)
+
+```3. Initialize Data (Required)
 The application includes a data.sql file. If running manually on MySQL, execute these commands to prevent "No Provider Found" errors:
 -- 1. Create Service Catalog
 INSERT INTO service (name, base_price) VALUES ('Plumbing', 1500);
@@ -150,7 +151,7 @@ GET,/api/services/{id},Get service details
 POST,/api/services,Add a new service (Admin)
 DELETE,/api/services/{id},Delete a service from the catalog (Admin)
 
-
+```
 
 👨‍💻 Author
 Abdul Rahman Mourad BIE-TJV.21 Project
