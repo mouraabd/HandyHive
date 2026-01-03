@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HandyHive - Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f0f2f5; }
+        .profile-card { border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .avatar-circle { width: 100px; height: 100px; background-color: #212529; color: #fff; font-size: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px; }
+
+        /* Subscription Bar Styles */
+        .sub-active { border-left: 5px solid #198754; background-color: #f8fff9; }
+        .sub-standard { border-left: 5px solid #ffc107; background-color: #fffbf0; }
+
+        /* Disabled Input Styling */
+        input:disabled, textarea:disabled { background-color: #e9ecef !important; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-warning fs-3" href="index.html">HandyHive</a>
+        <div class="d-flex align-items-center gap-3">
+            <select class="form-select form-select-sm border-dark fw-bold" style="width:auto;" id="langSelect" onchange="changeLanguage(this.value)">
+                <option value="en">🇺🇸 EN</option>
+                <option value="cz">🇨🇿 CZ</option>
+                <option value="ar">🇸🇦 AR</option>
+            </select>
+            <button onclick="logout()" class="btn btn-outline-dark btn-sm rounded-pill px-3" data-i18n="nav_logout">Log Out</button>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="card profile-card p-4 text-center h-100">
+                <div class="avatar-circle" id="avatarInitial">U</div>
+                <h4 class="fw-bold mb-1" id="userName">Loading...</h4>
+
+                <div class="d-flex justify-content-center gap-2 mb-2">
+                    <span class="badge bg-warning text-dark" id="roleBadge">User</span>
+                    <span class="badge bg-success d-none" id="vettedBadge"><i class="bi bi-patch-check-fill"></i> <span data-i18n="vetted_yes">Vetted</span></span>
+                </div>
+
+                <p class="text-muted small mb-4" id="userEmail">...</p>
+                <hr>
+
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        <h3 class="fw-bold mb-0" id="statRating">-</h3>
+                        <small class="text-muted">Rating</small>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="fw-bold mb-0" id="statJobs">0</h3>
+                        <small class="text-muted">Jobs</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card profile-card p-4">
+
+                <div id="subSection" class="d-none mb-4">
+                    <h5 class="fw-bold text-dark mb-3" data-i18n="header_sub">Subscription</h5>
+
+                    <div id="subCard" class="p-3 rounded d-flex justify-content-between align-items-center sub-standard">
+                        <div>
+                            <h6 class="fw-bold mb-1 text-uppercase" id="planName">STANDARD PLAN</h6>
+                            <small class="text-muted" id="planDesc">Next Renewal: Never</small>
+                        </div>
+
+                        <div>
+                            <span class="badge bg-success me-2 d-none" id="statusActive" data-i18n="status_active">Active</span>
+
+                            <button id="btnUpgrade" class="btn btn-dark btn-sm" onclick="window.location.href='subscription.html'" data-i18n="btn_upgrade">Upgrade</button>
+
+                            <button id="btnCancel" class="btn btn-outline-danger btn-sm d-none" onclick="downgradePlan()" data-i18n="btn_cancel_sub">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="servicesSection" class="d-none mb-4">
+                    <h5 class="fw-bold text-dark mb-3" data-i18n="lbl_myservices">My Services</h5>
+                    <div id="servicesList" class="d-flex gap-2 flex-wrap"></div>
+                    <hr>
+                </div>
+
+                <h5 class="fw-bold text-dark mb-3" data-i18n="header_details">Personal Details</h5>
+                <form onsubmit="updateProfile(event)">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted" data-i18n="lbl_fname">First Name</label>
+                            <input type="text" id="editFname" class="form-control" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted" data-i18n="lbl_lname">Last Name</label>
+                            <input type="text" id="editLname" class="form-control" disabled>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted" data-i18n="lbl_phone">Phone Number</label>
+                            <input type="text" id="editPhone" class="form-control" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted" data-i18n="lbl_email">Email</label>
+                            <input type="text" id="editEmail" class="form-control bg-light" disabled>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small text-muted" data-i18n="lbl_bio">Bio</label>
+                        <textarea id="editBio" class="form-control" rows="3" disabled></textarea>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-3" data-i18n="header_settings">Account Settings</h5>
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex gap-2">
+                            <button type="button" id="editBtn" class="btn btn-dark" onclick="toggleEditMode()">
+                                <i class="bi bi-pencil-fill me-2"></i> <span data-i18n="btn_edit">Edit Profile</span>
+                            </button>
+                            <button type="button" id="saveBtn" class="btn btn-success d-none" onclick="updateProfile(event)">
+                                <i class="bi bi-check-lg me-2"></i> <span data-i18n="btn_save">Save Changes</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="alert('Demo Feature')">
+                                <i class="bi bi-key me-2"></i> <span data-i18n="btn_pass">Change Password</span>
+                            </button>
+                        </div>
+                        <button type="button" onclick="deleteAccount()" class="btn btn-danger">
+                            <i class="bi bi-trash-fill me-2"></i> <span data-i18n="btn_delete">Delete</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let globalData = null; // Store data to re-render on lang change
+
+    // Listen for language changes from main.js
+    document.addEventListener('langChanged', () => {
+        if(globalData) renderProfile(globalData);
+    });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) window.location.href = "login.html";
+
+    // --- 1. LOAD DATA ---
+    async function loadProfile() {
+        const endpoint = user.role === 'PROVIDER'
+            ? `http://localhost:8082/api/providers/${user.id || user.providerId}`
+            : `http://localhost:8082/api/customers/${user.id}`;
+
+        try {
+            const res = await fetch(endpoint);
+            globalData = await res.json();
+            renderProfile(globalData);
+        } catch (e) { console.error(e); }
+    }
+
+    // --- 2. RENDER UI ---
+    function renderProfile(data) {
+        const lang = localStorage.getItem('appLang') || 'en';
+        const t = translations[lang];
+
+        // Basic Info
+        document.getElementById('userName').innerText = `${data.firstName} ${data.lastName}`;
+        document.getElementById('avatarInitial').innerText = data.firstName.charAt(0);
+        document.getElementById('userEmail').innerText = data.email;
+        document.getElementById('roleBadge').innerText = user.role === 'PROVIDER' ? t.role_provider : t.role_customer;
+
+        // Form Fields
+        document.getElementById('editFname').value = data.firstName;
+        document.getElementById('editLname').value = data.lastName;
+        document.getElementById('editEmail').value = data.email;
+        document.getElementById('editPhone').value = data.phoneNumber || "";
+        if(data.bio) document.getElementById('editBio').value = data.bio;
+
+        // --- PROVIDER SPECIFIC LOGIC ---
+        if (user.role === 'PROVIDER') {
+            document.getElementById('subSection').classList.remove('d-none');
+            document.getElementById('servicesSection').classList.remove('d-none');
+
+            document.getElementById('statRating').innerText = data.avgRating ? data.avgRating.toFixed(1) : "0.0";
+
+            // ✅ FIX: Read directly from DB field (matches your 50 jobs screenshot)
+            // Ensure you added "private Integer jobsCompleted;" to Provider.java
+            document.getElementById('statJobs').innerText = data.jobsCompleted || "0";
+
+            // -- SERVICES BADGES --
+            const list = document.getElementById('servicesList');
+            list.innerHTML = "";
+            const serviceKeyMap = { "Plumbing": "svc_plumbing", "Electrician": "svc_electrician", "Handyman": "svc_handyman", "Deep Cleaning": "svc_cleaning" };
+
+            if(data.services && data.services.length > 0) {
+                data.services.forEach(s => {
+                    const key = serviceKeyMap[s.name];
+                    const name = (t && t[key]) ? t[key] : s.name;
+                    list.innerHTML += `<span class="badge bg-primary fs-6 fw-normal">${name}</span>`;
+                });
+            } else {
+                list.innerHTML = `<span class="text-muted small">No services.</span>`;
+            }
+
+            // -- SUBSCRIPTION LOGIC --
+            const planId = data.subscriptionId || 1;
+
+            if(planId > 1) {
+                // PREMIUM (Monthly or Annual)
+                document.getElementById('planName').innerText = planId == 2 ? t.plan_monthly : t.plan_annual;
+                document.getElementById('planName').classList.add("text-success");
+
+                // Calculate Renewal Date
+                const today = new Date();
+                let renewalDate = new Date();
+                if (planId == 2) {
+                    renewalDate.setMonth(today.getMonth() + 1); // +1 Month
+                } else if (planId == 3) {
+                    renewalDate.setFullYear(today.getFullYear() + 1); // +1 Year
+                }
+
+                document.getElementById('planDesc').innerText = t.renewal_next + " " + renewalDate.toLocaleDateString();
+                document.getElementById('subCard').classList.replace("sub-standard", "sub-active");
+                document.getElementById('statusActive').classList.remove('d-none');
+                document.getElementById('vettedBadge').classList.remove('d-none');
+
+                document.getElementById('btnUpgrade').classList.add('d-none');
+                document.getElementById('btnCancel').classList.remove('d-none');
+            } else {
+                // FREE
+                document.getElementById('planName').innerText = t.plan_standard;
+                document.getElementById('planDesc').innerText = t.renewal_never;
+                document.getElementById('vettedBadge').classList.add('d-none');
+
+                document.getElementById('btnUpgrade').classList.remove('d-none');
+                document.getElementById('btnCancel').classList.add('d-none');
+            }
+        } else {
+            // Customer View: Hide stats row
+            document.getElementById('statRating').parentElement.parentElement.classList.add('d-none');
+        }
+    }
+
+    // --- 3. EDIT MODE TOGGLE ---
+    function toggleEditMode() {
+        const inputs = ['editFname', 'editLname', 'editPhone', 'editBio'];
+        const isEditable = !document.getElementById('editFname').disabled;
+
+        inputs.forEach(id => document.getElementById(id).disabled = isEditable);
+
+        if (isEditable) { // Switched to Edit Mode
+            document.getElementById('editBtn').classList.remove('d-none');
+            document.getElementById('saveBtn').classList.add('d-none');
+        } else { // Switched to Save Mode
+            document.getElementById('editBtn').classList.add('d-none');
+            document.getElementById('saveBtn').classList.remove('d-none');
+        }
+    }
+
+    // --- 4. API ACTIONS ---
+    async function updateProfile(e) {
+        e.preventDefault();
+        const payload = {
+            firstName: document.getElementById('editFname').value,
+            lastName: document.getElementById('editLname').value,
+            phoneNumber: document.getElementById('editPhone').value,
+            bio: document.getElementById('editBio').value
+        };
+        const endpoint = user.role === 'PROVIDER' ? `http://localhost:8082/api/providers/${user.id}` : `http://localhost:8082/api/customers/${user.id}`;
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if(res.ok) {
+                alert("Profile saved!");
+                toggleEditMode(); // Lock fields
+                loadProfile(); // Refresh Data
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function downgradePlan() {
+        if(!confirm("Cancel Subscription?")) return;
+        await fetch(`http://localhost:8082/api/providers/${user.id}/subscription?planId=1`, { method: 'PUT' });
+        location.reload();
+    }
+
+    async function deleteAccount() {
+        if(!confirm("Delete Account? This cannot be undone.")) return;
+        const url = user.role === 'PROVIDER' ? `http://localhost:8082/api/providers/${user.id}` : `http://localhost:8082/api/customers/${user.id}`;
+        await fetch(url, { method: 'DELETE' });
+        logout();
+    }
+
+    function logout() { localStorage.removeItem('user'); window.location.href = "login.html"; }
+
+    // Initialize
+    loadProfile();
+</script>
+</body>
+</html>

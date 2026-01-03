@@ -1,0 +1,7 @@
+{
+  "description": "My kitchen sink is leaking badly.",
+  "userId": 1,
+  "providerId": 100,
+  "serviceId": 1,
+  "isUrgent": true
+}

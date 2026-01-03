@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HandyHive - Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .bg-gold { background-color: #ffc107; }
+        .btn-brand { background-color: #000; color: #fff; font-weight: bold; }
+        .btn-brand:hover { background-color: #333; color: #fff; }
+    </style>
+</head>
+<body class="bg-gold d-flex align-items-center justify-content-center vh-100">
+
+<div class="card p-5 border-0 shadow-lg" style="max-width: 500px; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
+    <h2 class="fw-bold mb-4 text-center">Create Account</h2>
+
+    <div id="errorAlert" class="alert alert-danger d-none small"></div>
+
+    <div class="d-flex justify-content-center gap-4 mb-4">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="role" id="roleUser" value="customer" checked onchange="toggleProviderFields()">
+            <label class="form-check-label fw-bold" for="roleUser">Customer</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="role" id="roleProvider" value="provider" onchange="toggleProviderFields()">
+            <label class="form-check-label fw-bold" for="roleProvider">Service Provider</label>
+        </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-6"><input type="text" id="fname" class="form-control" placeholder="First Name"></div>
+        <div class="col-6"><input type="text" id="lname" class="form-control" placeholder="Last Name"></div>
+    </div>
+
+    <input type="email" id="email" class="form-control mb-3" placeholder="Email Address">
+
+    <div class="input-group mb-3">
+        <span class="input-group-text bg-white fw-bold text-muted border-end-0">+420</span>
+        <input type="text" id="phone" class="form-control border-start-0" placeholder="777 123 456">
+    </div>
+
+    <input type="password" id="pass" class="form-control mb-4" placeholder="Password">
+
+    <div id="providerFields" class="d-none p-3 bg-light rounded border mb-3">
+
+        <label class="small fw-bold mb-2 text-dark">Select Services you provide:</label>
+        <div class="mb-3">
+            <div class="form-check"><input class="form-check-input svc-chk" type="checkbox" value="1"><label>Plumbing</label></div>
+            <div class="form-check"><input class="form-check-input svc-chk" type="checkbox" value="2"><label>Electrician</label></div>
+            <div class="form-check"><input class="form-check-input svc-chk" type="checkbox" value="3"><label>Handyman</label></div>
+            <div class="form-check"><input class="form-check-input svc-chk" type="checkbox" value="4"><label>Deep Cleaning</label></div>
+        </div>
+
+        <label class="small fw-bold mb-2 text-dark">Upload ID / Certificate:</label>
+        <input type="file" id="vettingDoc" class="form-control form-control-sm" accept=".pdf,.jpg,.png">
+        <div class="form-text small">Required for verification badge.</div>
+    </div>
+
+    <button onclick="register()" class="btn btn-brand w-100 mb-3">Register Now</button>
+    <a href="login.html" class="text-center d-block text-dark text-decoration-none">Back to Login</a>
+</div>
+
+<script>
+    // 1. Toggle Provider Fields (Services + File Upload)
+    function toggleProviderFields() {
+        const isProvider = document.getElementById('roleProvider').checked;
+        const div = document.getElementById('providerFields');
+        if(isProvider) {
+            div.classList.remove('d-none');
+        } else {
+            div.classList.add('d-none');
+        }
+    }
+
+    // 2. Register Function
+    async function register() {
+        const errorBox = document.getElementById('errorAlert');
+        errorBox.classList.add('d-none');
+
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const fname = document.getElementById('fname').value;
+        const lname = document.getElementById('lname').value;
+        const email = document.getElementById('email').value;
+        const rawPhone = document.getElementById('phone').value;
+        const pass = document.getElementById('pass').value;
+
+        if(!fname || !lname || !email || !pass || !rawPhone) {
+            showError("Please fill in all fields.");
+            return;
+        }
+
+        const fullPhone = rawPhone.startsWith("+") ? rawPhone : "+420" + rawPhone.replace(/\s/g, '');
+
+        try {
+            let res;
+
+            // ---------------------------
+            // A. PROVIDER LOGIC (FormData)
+            // ---------------------------
+            if (role === 'provider') {
+                const formData = new FormData();
+                formData.append("firstName", fname);
+                formData.append("lastName", lname);
+                formData.append("email", email);
+                formData.append("password", pass);
+                formData.append("phone", fullPhone);
+
+                // Add Services
+                document.querySelectorAll('.svc-chk:checked').forEach(cb => {
+                    formData.append("serviceIds", cb.value);
+                });
+
+                // Add File
+                const fileInput = document.getElementById("vettingDoc");
+                if (fileInput.files.length > 0) {
+                    formData.append("document", fileInput.files[0]);
+                }
+
+                res = await fetch('http://localhost:8082/api/providers/register', {
+                    method: 'POST',
+                    body: formData // Browser sets Content-Type to multipart/form-data automatically
+                });
+            }
+
+                // ---------------------------
+                // B. CUSTOMER LOGIC (JSON)
+            // ---------------------------
+            else {
+                const payload = {
+                    firstName: fname,
+                    lastName: lname,
+                    email: email,
+                    passwordHash: pass,
+                    phoneNumber: fullPhone
+                };
+
+                res = await fetch('http://localhost:8082/api/customers/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            // ---------------------------
+            // HANDLE RESPONSE
+            // ---------------------------
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || `Server Error: ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            // Auto-Login after success
+            const loginRes = await fetch('http://localhost:8082/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: pass })
+            });
+
+            if (loginRes.ok) {
+                const loginData = await loginRes.json();
+                const finalId = (role === 'customer') ? data.id : (data.providerId || data.id);
+
+                const user = {
+                    id: finalId,
+                    providerId: (role === 'provider') ? finalId : null,
+                    email: email,
+                    role: role.toUpperCase(),
+                    token: loginData.token
+                };
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = role === 'provider' ? 'profile.html' : 'index.html';
+            } else {
+                window.location.href = 'login.html';
+            }
+
+        } catch(e) {
+            console.error(e);
+            showError(e.message);
+        }
+    }
+
+    function showError(msg) {
+        const box = document.getElementById('errorAlert');
+        box.innerText = msg;
+        box.classList.remove('d-none');
+    }
+</script>
+</body>
+</html>

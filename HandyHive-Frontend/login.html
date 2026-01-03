@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HandyHive - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #ffc107; /* HandyHive Yellow */
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .form-control {
+            background-color: #f8f9fa;
+            border: none;
+            height: 50px;
+            margin-bottom: 1rem;
+        }
+        .btn-black {
+            background-color: black;
+            color: white;
+            font-weight: bold;
+            height: 50px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        .btn-black:hover {
+            background-color: #333;
+            color: white;
+        }
+        .btn-outline {
+            background-color: white;
+            color: black;
+            border: 1px solid black;
+            font-weight: bold;
+            height: 50px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .btn-outline:hover {
+            background-color: #f8f9fa;
+        }
+        .error-box {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2 class="fw-bold mb-4">HANDYHIVE</h2>
+
+    <div id="error-message" class="error-box">
+        Login Failed: Profile not found. Please register.
+    </div>
+
+    <form id="loginForm">
+        <input type="text" id="email" class="form-control" placeholder="Email (e.g., Jack@Hero.com)" required>
+
+        <div class="input-group mb-3">
+            <input type="password" id="password" class="form-control mb-0" placeholder="Password" required>
+            <span class="input-group-text bg-white border-0" style="cursor: pointer;" onclick="togglePassword()">
+                <i class="bi bi-eye"></i>
+            </span>
+        </div>
+
+        <button type="submit" class="btn btn-black">Log In</button>
+    </form>
+
+    <a href="register.html">
+        <button class="btn btn-outline">Sign Up</button>
+    </a>
+</div>
+
+<script>
+    function togglePassword() {
+        const passwordField = document.getElementById("password");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+        } else {
+            passwordField.type = "password";
+        }
+    }
+
+    // ✅ ROBUST LOGIN LOGIC
+    async function handleLogin(event) {
+        event.preventDefault(); // Stop page reload
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorBox = document.getElementById('error-message');
+
+        // Clear previous errors
+        errorBox.style.display = 'none';
+
+        try {
+            const response = await fetch('http://localhost:8082/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            });
+
+            // Parse response safely
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                // If backend sends text instead of JSON (fallback)
+                throw new Error("Invalid server response");
+            }
+
+            if (response.ok) {
+                // ✅ LOGIN SUCCESS
+                console.log("Login successful:", data);
+
+                // 1. Save User Data to LocalStorage
+                localStorage.setItem('user', JSON.stringify(data));
+
+                // 2. Redirect based on Role
+                if (data.role === 'PROVIDER') {
+                    window.location.href = 'profile.html';
+                } else if (data.role === 'CUSTOMER') {
+                    window.location.href = 'index.html'; // Or services.html
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                // ❌ LOGIN FAILED (Show Error)
+                errorBox.innerText = data.error || "Invalid credentials";
+                errorBox.style.display = 'block';
+            }
+        } catch (error) {
+            console.error("Login Error:", error);
+            errorBox.innerText = "Cannot connect to server. Check if Backend is running.";
+            errorBox.style.display = 'block';
+        }
+    }
+
+    // Attach Event Listener
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

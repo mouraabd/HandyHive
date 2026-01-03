@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Get the App - HandyHive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg border-bottom">
+    <div class="container">
+        <a class="navbar-brand text-warning" href="index.html">HandyHive</a>
+        <div class="d-flex gap-3">
+            <a href="index.html" class="btn btn-sm btn-outline-dark" data-i18n="link_back_home">Back Home</a>
+            <select id="langSelect" class="form-select form-select-sm border-dark fw-bold" style="width: 100px;" onchange="changeLanguage(this.value)">
+                <option value="en">EN</option>
+                <option value="cz">CZ</option>
+                <option value="ar">AR</option>
+            </select>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5 text-center">
+    <h1 class="fw-800 mb-4" data-i18n="dl_title">Download HandyHive</h1>
+    <p class="lead text-muted mb-5" data-i18n="dl_sub">Experience the full power of home services on your mobile device.</p>
+    <div class="row justify-content-center g-4">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm p-4 h-100">
+                <i class="bi bi-android2 display-1 text-success mb-3"></i>
+                <h3>Android</h3>
+                <ol class="text-start mt-3">
+                    <li data-i18n="dl_android_step1">Open <b>Google Play Store</b>.</li>
+                    <li data-i18n="dl_android_step2">Search for "HandyHive CZ".</li>
+                    <li data-i18n="dl_android_step3">Tap <b>Install</b>.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm p-4 h-100">
+                <i class="bi bi-apple display-1 text-dark mb-3"></i>
+                <h3>iOS</h3>
+                <ol class="text-start mt-3">
+                    <li data-i18n="dl_ios_step1">Open the <b>App Store</b>.</li>
+                    <li data-i18n="dl_ios_step2">Search for "HandyHive".</li>
+                    <li data-i18n="dl_ios_step3">Tap <b>Get</b>.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/main.js"></script>
+</body>
+</html>

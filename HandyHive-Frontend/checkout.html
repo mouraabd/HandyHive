@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HandyHive - Secure Checkout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .checkout-card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
+        .amount-display { font-size: 2.5rem; font-weight: bold; color: #0d6efd; margin: 1rem 0; }
+        .form-control { background-color: #f1f3f5; border: none; height: 50px; margin-bottom: 1rem; }
+        .btn-pay { background-color: #ffc107; color: black; font-weight: bold; height: 50px; width: 100%; border-radius: 8px; border: none; }
+        .btn-pay:hover { background-color: #e0a800; }
+        .item-list { text-align: left; background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px; max-height: 100px; overflow-y: auto; }
+        .item-row { display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0; }
+        .item-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+<div class="checkout-card">
+    <h4 class="mb-3 text-muted">TOTAL AMOUNT</h4>
+    <div class="amount-display" id="totalAmount">0 Kč</div>
+
+    <div id="orderSummary" class="item-list d-none">
+    </div>
+
+    <form id="paymentForm">
+        <label class="text-start d-block fw-bold small text-muted">Card Number</label>
+        <input type="text" id="cardNumber" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" required>
+
+        <div class="row">
+            <div class="col-6">
+                <label class="text-start d-block fw-bold small text-muted">Expiry</label>
+                <input type="text" id="expiry" class="form-control" placeholder="MM/YY" maxlength="5" required>
+            </div>
+            <div class="col-6">
+                <label class="text-start d-block fw-bold small text-muted">CVV</label>
+                <input type="text" id="cvv" class="form-control" placeholder="123" maxlength="3" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-pay mt-2">Pay & Confirm</button>
+        <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="history.back()">Cancel</button>
+    </form>
+</div>
+
+<script>
+    // --- 1. INPUT FORMATTING LOGIC ---
+
+    // Auto-Space Card Number (0000 0000 0000 0000)
+    document.getElementById('cardNumber').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        value = value.substring(0, 16); // Limit to 16 digits
+        // Add space every 4 digits
+        e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+    });
+
+    // Auto-Slash Expiry (MM/YY)
+    document.getElementById('expiry').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        if (value.length >= 2) {
+            e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        } else {
+            e.target.value = value;
+        }
+    });
+
+    // --- 2. MULTI-SERVICE CART LOGIC ---
+
+    let cartItems = [];
+    let isSubscription = false;
+
+    // Initialize Page
+    (function init() {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type');
+
+        // CASE A: Single Item (From URL)
+        if (type === 'service' || type === 'subscription') {
+            isSubscription = (type === 'subscription');
+            cartItems.push({
+                type: type,
+                id: params.get('id'),
+                price: parseFloat(params.get('price')),
+                urgent: params.get('urgent') === 'true',
+                providerId: params.get('providerId'),
+                name: "Selected Service" // Placeholder
+            });
+        }
+        // CASE B: Multiple Items (From LocalStorage "Cart")
+        else {
+            const storedCart = JSON.parse(localStorage.getItem('handyhive_cart')) || [];
+            if(storedCart.length > 0) {
+                cartItems = storedCart;
+                document.getElementById('orderSummary').classList.remove('d-none');
+
+                // Render List
+                const list = document.getElementById('orderSummary');
+                cartItems.forEach(item => {
+                    list.innerHTML += `
+                        <div class="item-row">
+                            <span>${item.name || 'Service'}</span>
+                            <strong>${item.price} Kč</strong>
+                        </div>`;
+                });
+            }
+        }
+
+        // Calculate Total
+        const total = cartItems.reduce((sum, item) => sum + item.price, 0);
+        document.getElementById('totalAmount').innerText = total + " Kč";
+    })();
+
+    // --- 3. PAYMENT PROCESS LOOP ---
+
+    document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) { alert("Please log in."); window.location.href = 'login.html'; return; }
+
+        // We process items one by one. If one fails, we stop and alert.
+        let successCount = 0;
+
+        for (const item of cartItems) {
+            let url, method, body;
+
+            // Logic for JOB Creation
+            if (item.type === 'service') {
+                url = "http://localhost:8082/api/jobs/create";
+                method = "POST";
+                body = {
+                    customerId: user.id,
+                    providerId: item.providerId, // ✅ Uses the specific provider for THIS job
+                    serviceId: item.id,
+                    isUrgent: item.urgent || false,
+                    description: "Booked via Secure Checkout"
+                };
+            }
+            // Logic for SUBSCRIPTION
+            else if (item.type === 'subscription') {
+                const activeId = user.providerId || user.id;
+                url = `http://localhost:8082/api/providers/${activeId}/subscription?planId=${item.id}`;
+                method = "PUT";
+                body = {};
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) throw new Error("Server rejected request");
+                successCount++;
+
+            } catch (error) {
+                console.error(error);
+                alert(`Error processing item #${successCount + 1}. Stopping transaction.`);
+                return; // Stop loop on error
+            }
+        }
+
+        // If loop finishes successfully
+        alert(`Payment Successful! ${successCount} items processed. ✅`);
+
+        // Clear Cart
+        localStorage.removeItem('handyhive_cart');
+
+        // Redirect
+        if(isSubscription) window.location.href = 'profile.html';
+        else window.location.href = 'my-jobs.html';
+    });
+</script>
+
+</body>
+</html>

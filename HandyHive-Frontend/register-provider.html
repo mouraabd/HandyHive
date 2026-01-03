@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HandyHive - Provider Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+
+<div class="card shadow-lg p-4" style="max-width: 500px; width: 100%;">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-warning">HandyHive</h3>
+        <p class="text-muted">Join as a Service Provider</p>
+    </div>
+
+    <form id="regForm" onsubmit="handleRegister(event)">
+        <div class="row g-2">
+            <div class="col-6 mb-3">
+                <label class="form-label">First Name</label>
+                <input type="text" id="firstName" class="form-control" required>
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Last Name</label>
+                <input type="text" id="lastName" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Phone Number</label>
+            <input type="text" id="phone" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold">Upload Vetting Document (ID/Certificate)</label>
+            <input type="file" id="vettingDoc" class="form-control" accept=".pdf,.jpg,.png">
+            <div class="form-text">Required to get the "Vetted" badge.</div>
+        </div>
+
+        <button type="submit" class="btn btn-warning w-100 fw-bold">Create Account</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <small>Want to hire? <a href="login.html">Register as Customer</a></small>
+    </div>
+</div>
+
+<script>
+    async function handleRegister(e) {
+        e.preventDefault();
+
+        // 1. Prepare FormData (Required for File Uploads)
+        const formData = new FormData();
+        formData.append("firstName", document.getElementById("firstName").value);
+        formData.append("lastName", document.getElementById("lastName").value);
+        formData.append("email", document.getElementById("email").value);
+        formData.append("password", document.getElementById("password").value);
+        formData.append("phone", document.getElementById("phone").value);
+
+        const fileInput = document.getElementById("vettingDoc");
+        if (fileInput.files.length > 0) {
+            formData.append("document", fileInput.files[0]);
+        }
+
+        try {
+            const response = await fetch("http://localhost:8082/api/providers/register", {
+                method: "POST",
+                body: formData // No Content-Type header needed, browser sets it for FormData
+            });
+
+            if (response.ok) {
+                alert("Account created successfully! You can now log in.");
+                window.location.href = "login.html";
+            } else {
+                const errorText = await response.text();
+                alert("Registration failed: " + errorText);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Server connection error.");
+        }
+    }
+</script>
+
+</body>
+</html>
