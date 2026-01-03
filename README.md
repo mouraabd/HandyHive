@@ -49,7 +49,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/handyhive_db?createDatabaseIfN
 spring.datasource.username=root
 spring.datasource.password=YOUR_PASSWORD
 spring.jpa.hibernate.ddl-auto=update
-
+```
 3. Initialize Data (Required)
 The application includes a data.sql file. If running manually on MySQL, execute these commands to prevent "No Provider Found" errors:
 -- 1. Create Service Catalog
