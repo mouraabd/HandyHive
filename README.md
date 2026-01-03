@@ -1,6 +1,6 @@
 # 🐝 HandyHive - Service Marketplace Platform
 
-![Java](https://img.shields.io/badge/Java-17-blue) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.0-green) ![Bootstrap](https://img.shields.io/badge/Frontend-Bootstrap_5-purple) ![Database](https://img.shields.io/badge/Database-MySQL-orange)
+![Java](https://img.shields.io/badge/Java-17-blue) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.0-green) ![Bootstrap](https://img.shields.io/badge/Frontend-Bootstrap_5-purple) ![Database](https://img.shields.io/badge/Database-PostgreSQL-316192)
 
 **HandyHive** is a comprehensive full-stack marketplace application designed to bridge the gap between local service professionals (Plumbers, Electricians, Handymen) and customers. It features a robust job lifecycle management system, secure booking workflows, and role-based access control.
 
