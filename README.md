@@ -66,6 +66,7 @@ INSERT INTO provider_services (provider_id, service_id) VALUES (1, 2);
 INSERT INTO provider_services (provider_id, service_id) VALUES (1, 3);
 INSERT INTO provider_services (provider_id, service_id) VALUES (1, 4);
 
+
 4. Run the Backend (Server)
 Navigate to the HandyHive-Backend folder and run:
 
@@ -83,9 +84,9 @@ Navigate to the HandyHive-Frontend folder.
 Open index.html in your web browser (Chrome/Edge recommended).
 
 Tip: For the best experience, use "Open with Live Server" in VS Code or the built-in browser preview in IntelliJ to avoid CORS issues.
+```
 
-
-📖 User Guide
+```📖 User Guide
 
 🔐 Authentication
 Role,Email,Password
@@ -111,7 +112,9 @@ Navigate to My Jobs to see "Pending" requests.
 Click Accept to change status to IN_PROGRESS.
 
 Once the work is done, click Mark Resolved to complete the job.
+```
 
+```
 🔌 API Documentation
 API Examples: Please refer to the requests.http file in the project root for executable request examples.
 
