@@ -72,11 +72,28 @@ INSERT INTO provider_services (provider_id, service_id) VALUES (1, 4); -- Cleani
 Navigate to the project root and run:
 
 Bash
+**Windows:**
+```bash
+gradlew.bat bootRun
 
-mvn spring-boot:run
+Mac/Linux:
+./gradlew bootRun
+
 The application will be accessible at: http://localhost:8082
 
+### 🌐 Step 3: Add Client Running Instructions to `README.md`
+You forgot to tell the teacher how to run the frontend.
 
+1.  Open `README.md`.
+2.  Scroll to the bottom of the "Installation & Setup" section (after "Run the Application").
+3.  **Add this new section**:
+
+```markdown
+### 5. Run the Frontend (Client)
+1. Navigate to the `HandyHive-Frontend` folder.
+2. Open `index.html` in your web browser (Chrome/Edge recommended).
+   * *Tip: For the best experience, use "Open with Live Server" in VS Code or the built-in browser preview in IntelliJ to avoid CORS issues.*
+   
 📖 User Guide
 🔐 Authentication
 Role,Email,Password
@@ -108,6 +125,7 @@ Once the work is done, click Mark Resolved to complete the job.
 
 
 🔌 API Documentation
+**API Examples:** Please refer to the `requests.http` file in the project root for executable request examples.
 
 🔐 Auth & Users
 Method,Endpoint,Description

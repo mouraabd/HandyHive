@@ -1,0 +1,42 @@
+### 1. Register a New Customer
+POST http://localhost:8082/api/customers/register
+Content-Type: application/json
+
+{
+  "firstName": "Alice",
+  "lastName": "Client",
+  "email": "alice@client.com",
+  "passwordHash": "password123",
+  "phoneNumber": "+420123456789"
+}
+
+### 2. Login (Get Token)
+# Use this token in the Authorization header for subsequent requests
+POST http://localhost:8082/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@client.com",
+  "password": "password123"
+}
+
+### 3. List All Services
+GET http://localhost:8082/api/services
+
+### 4. Find Matching Providers for a Service (e.g., Plumbing ID=1)
+GET http://localhost:8082/api/providers/match/1
+
+### 5. Create a Job Request (Booking)
+POST http://localhost:8082/api/jobs/create
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "providerId": 1,
+  "serviceId": 1,
+  "isUrgent": true,
+  "description": "Leaky faucet in the kitchen"
+}
+
+### 6. Get Job Status (As Customer)
+GET http://localhost:8082/api/jobs/customer/1
