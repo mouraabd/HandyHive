@@ -328,7 +328,7 @@ firstName: "John"
 email: "john@work.com"
 password: "secure123"
 document: [Binary File]
-
+```
 Response: 200 OK
 
 ---
