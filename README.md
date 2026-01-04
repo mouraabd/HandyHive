@@ -1,6 +1,6 @@
 # 🛠️ HandyHive - Service Marketplace
 
-> CTU FIT - BI-TJV Semestral Project Author: Abdulrehman Academic Year: 2024/2025
+> CTU FIT - BI-TJV Semestral Project Author: Abdulrehman Academic Year: 2025/2026
 
 ---
 
