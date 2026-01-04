@@ -1,6 +1,6 @@
 # 🛠️ HandyHive - Service Marketplace
 
-> CTU FIT - BI-TJV Semestral Project Author: Abdulrehman Academic Year: 2025/2026
+> CTU FIT - BI-TJV Semestral Project Author: Abdul Rahman Mourad Academic Year: 2025/2026
 
 ---
 
@@ -199,31 +199,25 @@ private Set<Service> services = new HashSet<>();
 ## 📡 API Endpoints
 
 ### User Management
-
-```text
-Method,Endpoint,Description
-POST,/api/customers,Register customer
-GET,/api/customers/{id},Get profile
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/customers` | Register customer |
+| GET | `/api/customers/{id}` | Get profile |
 
 ### Provider Management
-
-```text
-Method,Endpoint,Description
-POST,/api/providers,Register (Multipart)
-GET,/api/providers,List all providers
-PUT,/api/providers/{id},Update profile
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/providers` | Register (Multipart) |
+| GET | `/api/providers` | List all providers |
+| PUT | `/api/providers/{id}` | Update profile |
 
 ### Job System
-
-```text
-Method,Endpoint,Description
-POST,/api/jobs,Create Job
-GET,/api/jobs/user/{id},Customer History
-GET,/api/jobs/provider/{id},Provider History
-POST,/api/jobs/{id}/rating,Rate a job
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/jobs` | Create Job |
+| GET | `/api/jobs/user/{id}` | Customer History |
+| GET | `/api/jobs/provider/{id}` | Provider History |
+| POST | `/api/jobs/{id}/rating` | Rate a job |
 
 ---
 
@@ -328,16 +322,12 @@ Request: POST /api/jobs
 Response: 200 OK
 
 ### 2. Register Provider
-
-Request: POST /api/providers (Multipart)
-
+**Request:** `POST /api/providers` (Multipart)
 ```text
 firstName: "John"
-
 email: "john@work.com"
-
+password: "secure123"
 document: [Binary File]
-```
 
 Response: 200 OK
 
