@@ -1,11 +1,10 @@
-image: eclipse-temurin:21-jdk-alpine  # ✅ CHANGED FROM 17 TO 21
+image: eclipse-temurin:21-jdk-alpine
 
 # Define variables to optimize Gradle
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
 
-# Cache dependencies so the pipeline runs faster next time
 cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
@@ -16,33 +15,37 @@ cache:
 stages:
   - test
 
-# ✅ JOB: Run Backend Unit & Integration Tests
 backend-test:
   stage: test
 
-  # Spin up a temporary PostgreSQL database for testing
+  # ✅ FIX 1: Use the standard postgres image and alias it clearly
   services:
     - name: postgres:15-alpine
-      alias: db_service
+      alias: postgres
 
-  # Configure the App to talk to the temporary CI database
+  # ✅ FIX 2: Set the specific variables required for the 'postgres' service
   variables:
     POSTGRES_DB: handyhive_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: password
-    # Override your application.properties settings just for the pipeline:
-    SPRING_DATASOURCE_URL: "jdbc:postgresql://db_service:5432/handyhive_test"
+    POSTGRES_HOST_AUTH_METHOD: trust
+
+    # Configure Spring Boot to connect to the 'postgres' service alias
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/handyhive_test"
     SPRING_DATASOURCE_USERNAME: "postgres"
     SPRING_DATASOURCE_PASSWORD: "2005"
     SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
 
   script:
     - echo "🚀 Starting Pipeline..."
-    - cd HandyHive-Backend  # Enter the backend folder
-    - chmod +x gradlew      # Grant execution permission to Gradle wrapper
-    - ./gradlew test        # Run the tests
+    - cd HandyHive-Backend
+    - chmod +x gradlew
+    # ✅ FIX 3: Wait for DB to be ready before running tests (prevents connection refused)
+    - echo "Waiting for Database..."
+    - until nc -z postgres 5432; do sleep 1; done
+    - echo "Database is UP! Running tests..."
+    - ./gradlew test
 
-  # Save the test reports so you can see them in GitLab
   artifacts:
     when: always
     reports:
