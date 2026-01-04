@@ -1,4 +1,4 @@
-image: eclipse-temurin:17-jdk-alpine
+image: eclipse-temurin:21-jdk-alpine  # ✅ CHANGED FROM 17 TO 21
 
 # Define variables to optimize Gradle
 variables:
