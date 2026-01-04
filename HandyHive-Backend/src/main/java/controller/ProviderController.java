@@ -28,7 +28,7 @@ public class ProviderController {
     }
 
     // ✅ 1. Register Provider (Handles Files + Skills)
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> registerProvider(
             @RequestParam("firstName") String firstName,
             @RequestParam("lastName") String lastName,

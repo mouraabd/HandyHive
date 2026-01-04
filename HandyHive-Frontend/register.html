@@ -117,7 +117,7 @@
                     formData.append("document", fileInput.files[0]);
                 }
 
-                res = await fetch('http://localhost:8082/api/providers/register', {
+                res = await fetch('http://localhost:8082/api/providers', {
                     method: 'POST',
                     body: formData // Browser sets Content-Type to multipart/form-data automatically
                 });
@@ -135,7 +135,7 @@
                     phoneNumber: fullPhone
                 };
 
-                res = await fetch('http://localhost:8082/api/customers/register', {
+                res = await fetch('http://localhost:8082/api/customers', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)

@@ -57,4 +57,21 @@ public class JobControllerTest {
                 .andExpect(jsonPath("$.jobId").value(101))
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
+
+    @Test
+    public void testInvalidJobStatus_ShouldReturn400() throws Exception {
+        // 1. Mock the Service to throw your specific error
+        // (We simulate what JobService does when it sees bad input)
+        when(jobService.updateJobStatus(any(), eq("GARBAGE")))
+                .thenThrow(new IllegalArgumentException("Invalid status: GARBAGE"));
+
+        // 2. Perform the Request
+        mockMvc.perform(put("/api/jobs/1/status")
+                        .param("status", "GARBAGE")
+                        .contentType(MediaType.APPLICATION_JSON))
+
+                // 3. ASSERT that we get 400 Bad Request, NOT 500
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"));
+    }
 }

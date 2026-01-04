@@ -1,42 +1,67 @@
-### 1. Register a New Customer
-POST http://localhost:8082/api/customers/register
+### ==========================================
+### ✅ 1. SUCCESS FLOW (New REST URLs)
+### ==========================================
+
+### 1. Register Customer (URL is now /api/customers, NOT /register)
+POST http://localhost:8082/api/customers
 Content-Type: application/json
 
 {
   "firstName": "Alice",
-  "lastName": "Client",
-  "email": "alice@client.com",
+  "lastName": "Rest",
+  "email": "alice.rest@test.com",
   "passwordHash": "password123",
-  "phoneNumber": "+420123456789"
+  "phoneNumber": "123456789"
 }
 
 ### 2. Login (Get Token)
-# Use this token in the Authorization header for subsequent requests
 POST http://localhost:8082/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "alice@client.com",
+  "email": "alice.rest@test.com",
   "password": "password123"
 }
 
-### 3. List All Services
-GET http://localhost:8082/api/services
-
-### 4. Find Matching Providers for a Service (e.g., Plumbing ID=1)
-GET http://localhost:8082/api/providers/match/1
-
-### 5. Create a Job Request (Booking)
-POST http://localhost:8082/api/jobs/create
+### 3. Create Job (URL is now /api/jobs, NOT /create)
+# Replace 'customerId' with the ID you got from step 1
+POST http://localhost:8082/api/jobs
 Content-Type: application/json
 
 {
-  "customerId": 1,
+  "userId": 1,
   "providerId": 1,
   "serviceId": 1,
-  "isUrgent": true,
-  "description": "Leaky faucet in the kitchen"
+  "isUrgent": false,
+  "description": "REST API Test Job"
 }
 
-### 6. Get Job Status (As Customer)
-GET http://localhost:8082/api/jobs/customer/1
+### ==========================================
+### ❌ 2. ERROR HANDLING TESTS (Should NOT be 500)
+### ==========================================
+
+### TEST A: Duplicate Email (Expect 409 Conflict)
+# Run this immediately after Step 1.
+POST http://localhost:8082/api/customers
+Content-Type: application/json
+
+{
+  "firstName": "Alice",
+  "lastName": "Copy",
+  "email": "alice.rest@test.com",
+  "passwordHash": "pass",
+  "phoneNumber": "111"
+}
+# ✅ PASS if Status is 409
+# ❌ FAIL if Status is 500
+
+### TEST B: Invalid Job Status (Expect 400 Bad Request)
+# Try to set a status that doesn't exist
+PUT http://localhost:8082/api/jobs/1/status?status=INVALID_TEXT
+# ✅ PASS if Status is 400
+# ❌ FAIL if Status is 500
+
+### TEST C: Not Found (Expect 404)
+GET http://localhost:8082/api/jobs/999999
+# ✅ PASS if Status is 404
+# ❌ FAIL if Status is 500

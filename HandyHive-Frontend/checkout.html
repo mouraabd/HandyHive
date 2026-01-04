@@ -128,10 +128,10 @@
 
             // Logic for JOB Creation
             if (item.type === 'service') {
-                url = "http://localhost:8082/api/jobs/create";
+                url = "http://localhost:8082/api/jobs";
                 method = "POST";
                 body = {
-                    customerId: user.id,
+                    userId: user.id,
                     providerId: item.providerId, // ✅ Uses the specific provider for THIS job
                     serviceId: item.id,
                     isUrgent: item.urgent || false,

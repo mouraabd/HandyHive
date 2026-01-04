@@ -17,11 +17,7 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<Customer> registerCustomer(@RequestBody Customer customer) {
-        Customer newCustomer = customerService.registerCustomer(customer);
-        return ResponseEntity.ok(newCustomer);
-    }
+
 
     @GetMapping("/search")
     public ResponseEntity<List<Customer>> getCustomerByEmail(@RequestParam String email) {
@@ -35,5 +31,11 @@ public class CustomerController {
         return customerService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Customer> registerCustomer(@RequestBody Customer customer) {
+        Customer newCustomer = customerService.registerCustomer(customer);
+        return ResponseEntity.ok(newCustomer);
     }
 }

@@ -37,6 +37,10 @@ public class ProviderService {
             throw new RuntimeException("Email already taken");
         }
 
+        if (providerRepository.findByEmailIgnoreCase(provider.getEmail()).isPresent()) {
+            throw new RuntimeException("Conflict: Email already taken");
+        }
+
         // 1. Handle File Upload
         if (document != null && !document.isEmpty()) {
             String fileName = System.currentTimeMillis() + "_" + document.getOriginalFilename();

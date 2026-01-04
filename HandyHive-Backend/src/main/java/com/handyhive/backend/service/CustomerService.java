@@ -23,6 +23,9 @@ public class CustomerService {
         if (customerRepository.findByEmail(customer.getEmail()) != null) {
             throw new RuntimeException("Email already taken");
         }
+        if (customerRepository.findByEmailIgnoreCase(customer.getEmail()).isPresent()) {
+            throw new RuntimeException("Conflict: Email already taken");
+        }
 
         // Encrypt password
         customer.setPasswordHash(passwordEncoder.encode(customer.getPasswordHash()));

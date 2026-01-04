@@ -72,7 +72,7 @@
         }
 
         try {
-            const response = await fetch("http://localhost:8082/api/providers/register", {
+            const response = await fetch("http://localhost:8082/api/providers", {
                 method: "POST",
                 body: formData // No Content-Type header needed, browser sets it for FormData
             });

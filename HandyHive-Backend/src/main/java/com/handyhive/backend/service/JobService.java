@@ -96,4 +96,11 @@ public class JobService {
         job.setStatus(newStatus);
         return jobRepository.save(job);
     }
+
+
+    // ✅ NEW: Get Job by ID (used by the Controller)
+    public Job getJobById(Long id) {
+        return jobRepository.findById(id)
+                .orElseThrow(() -> new com.handyhive.backend.exception.ResourceNotFoundException("Job not found with id: " + id));
+    }
 }
