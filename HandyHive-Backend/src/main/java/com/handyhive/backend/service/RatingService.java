@@ -106,4 +106,15 @@ public class RatingService {
         // Recalculate after deletion
         updateProviderRating(provider);
     }
+
+    public Rating addRating(Long jobId, Rating rating) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        rating.setJob(job);
+        // Link rating to the provider who performed the job
+        rating.setProvider(job.getProvider());
+
+        return ratingRepository.save(rating);
+    }
 }

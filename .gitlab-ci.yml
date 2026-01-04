@@ -18,19 +18,19 @@ stages:
 backend-test:
   stage: test
 
-  # ✅ FIX 1: Use the standard postgres image and alias it clearly
+  # ✅ 1. Service: Spin up Postgres
   services:
     - name: postgres:15-alpine
       alias: postgres
 
-  # ✅ FIX 2: Set the specific variables required for the 'postgres' service
+  # ✅ 2. Variables: Configure connection to the 'postgres' alias
   variables:
     POSTGRES_DB: handyhive_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: password
     POSTGRES_HOST_AUTH_METHOD: trust
 
-    # Configure Spring Boot to connect to the 'postgres' service alias
+    # Overrides application.properties to use the CI database
     SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/handyhive_test"
     SPRING_DATASOURCE_USERNAME: "postgres"
     SPRING_DATASOURCE_PASSWORD: "2005"
@@ -39,11 +39,18 @@ backend-test:
   script:
     - echo "🚀 Starting Pipeline..."
     - cd HandyHive-Backend
+
+    # ✅ 3. Install Netcat (nc) to check when DB is ready
+    - apk add --no-cache netcat-openbsd
+
     - chmod +x gradlew
-    # ✅ FIX 3: Wait for DB to be ready before running tests (prevents connection refused)
+
+    # ✅ 4. Wait loop: Don't start tests until Postgres is actually listening
     - echo "Waiting for Database..."
-    - until nc -z postgres 5432; do sleep 1; done
+    - while ! nc -z postgres 5432; do sleep 1; done
     - echo "Database is UP! Running tests..."
+
+    # ✅ 5. Run the tests
     - ./gradlew test
 
   artifacts:

@@ -1,19 +1,16 @@
 package com.handyhive.backend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.handyhive.backend.controller.JobController;
 import com.handyhive.backend.dto.JobRequestDTO;
 import com.handyhive.backend.model.Job;
 import com.handyhive.backend.model.JobStatus;
 import com.handyhive.backend.service.JobService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration; // ✅ Import
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration; // ✅ Import
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc; // ✅ Import
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean; // ✅ New Annotation
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -24,21 +21,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// ✅ UPDATED ANNOTATIONS: Exclude Security Configurations to prevent "Missing Bean" errors
-@WebMvcTest(
-        controllers = JobController.class,
-        excludeAutoConfiguration = {
-                SecurityAutoConfiguration.class,
-                SecurityFilterAutoConfiguration.class
-        }
-)
-@AutoConfigureMockMvc(addFilters = false) // ✅ Disables Security Filters (403 Forbidden)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class JobControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean // ✅ Replaces deprecated @MockBean
     private JobService jobService;
 
     @Autowired
@@ -68,16 +58,12 @@ public class JobControllerTest {
 
     @Test
     public void testInvalidJobStatus_ShouldReturn400() throws Exception {
-        // 1. Mock the Service to throw your specific error
         when(jobService.updateJobStatus(any(), eq("GARBAGE")))
                 .thenThrow(new IllegalArgumentException("Invalid status: GARBAGE"));
 
-        // 2. Perform the Request
         mockMvc.perform(put("/api/jobs/1/status")
                         .param("status", "GARBAGE")
                         .contentType(MediaType.APPLICATION_JSON))
-
-                // 3. ASSERT that we get 400 Bad Request
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Bad Request"));
     }
