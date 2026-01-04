@@ -1,0 +1,49 @@
+image: eclipse-temurin:17-jdk-alpine
+
+# Define variables to optimize Gradle
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+
+# Cache dependencies so the pipeline runs faster next time
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .gradle/
+    - HandyHive-Backend/.gradle/
+    - HandyHive-Backend/build/
+
+stages:
+  - test
+
+# ✅ JOB: Run Backend Unit & Integration Tests
+backend-test:
+  stage: test
+
+  # Spin up a temporary PostgreSQL database for testing
+  services:
+    - name: postgres:15-alpine
+      alias: db_service
+
+  # Configure the App to talk to the temporary CI database
+  variables:
+    POSTGRES_DB: handyhive_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: password
+    # Override your application.properties settings just for the pipeline:
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://db_service:5432/handyhive_test"
+    SPRING_DATASOURCE_USERNAME: "postgres"
+    SPRING_DATASOURCE_PASSWORD: "2005"
+    SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
+
+  script:
+    - echo "🚀 Starting Pipeline..."
+    - cd HandyHive-Backend  # Enter the backend folder
+    - chmod +x gradlew      # Grant execution permission to Gradle wrapper
+    - ./gradlew test        # Run the tests
+
+  # Save the test reports so you can see them in GitLab
+  artifacts:
+    when: always
+    reports:
+      junit: HandyHive-Backend/build/test-results/test/**/TEST-*.xml
