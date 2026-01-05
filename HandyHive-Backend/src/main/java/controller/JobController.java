@@ -1,11 +1,14 @@
 package com.handyhive.backend.controller;
 
 import com.handyhive.backend.dto.JobRequestDTO;
+import com.handyhive.backend.dto.JobUpdateDTO;
 import com.handyhive.backend.model.Job;
 import com.handyhive.backend.service.JobService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -14,38 +17,64 @@ public class JobController {
 
     private final JobService jobService;
 
-    // Constructor Injection
     public JobController(JobService jobService) {
         this.jobService = jobService;
     }
 
-    // ✅ 1. Create Job (REST Standard: POST /api/jobs)
-    @PostMapping
-    public ResponseEntity<Job> createJob(@RequestBody JobRequestDTO dto) {
-        return ResponseEntity.ok(jobService.createJob(dto));
+    // ✅ READ (list)
+    @GetMapping
+    public ResponseEntity<List<Job>> getAllJobs() {
+        return ResponseEntity.ok(jobService.getAllJobs());
     }
 
-    // ✅ 2. Get Job By ID (Fixes the 404 Test)
+    // ✅ CREATE (201 Created + Location)
+    @PostMapping
+    public ResponseEntity<Job> createJob(@RequestBody JobRequestDTO dto) {
+        Job saved = jobService.createJob(dto);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getJobId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(saved);
+    }
+
+    // ✅ READ (by id)
     @GetMapping("/{id}")
     public ResponseEntity<Job> getJobById(@PathVariable Long id) {
         return ResponseEntity.ok(jobService.getJobById(id));
     }
 
-    // ✅ 3. Get Jobs for Provider
+    // ✅ READ (provider jobs)
     @GetMapping("/provider/{providerId}")
     public ResponseEntity<List<Job>> getProviderJobs(@PathVariable Long providerId) {
         return ResponseEntity.ok(jobService.getJobsForProvider(providerId));
     }
 
-    // ✅ 4. Get Jobs for Customer
+    // ✅ READ (customer jobs)
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<Job>> getCustomerJobs(@PathVariable Long customerId) {
         return ResponseEntity.ok(jobService.getJobsForCustomer(customerId));
     }
 
-    // ✅ 5. Update Status
+    // ✅ UPDATE (details)
+    @PutMapping("/{id}")
+    public ResponseEntity<Job> updateJob(@PathVariable Long id, @RequestBody JobUpdateDTO dto) {
+        return ResponseEntity.ok(jobService.updateJobDetails(id, dto));
+    }
+
+    // ✅ UPDATE (status)
     @PutMapping("/{id}/status")
     public ResponseEntity<Job> updateStatus(@PathVariable Long id, @RequestParam String status) {
         return ResponseEntity.ok(jobService.updateJobStatus(id, status));
+    }
+
+    // ✅ DELETE (204)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteJob(@PathVariable Long id) {
+        jobService.deleteJob(id);
+        return ResponseEntity.noContent().build();
     }
 }

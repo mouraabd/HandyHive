@@ -8,55 +8,51 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean; // ✅ New Spring Boot 3.4 annotation
-// If the line above is red, use: import org.springframework.boot.test.mock.mockito.MockBean; and change @MockitoBean to @MockBean below.
-
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest // ✅ Loads full context (Fixes missing bean errors)
-@AutoConfigureMockMvc // ✅ Enables MockMvc for testing endpoints
+@SpringBootTest
+@AutoConfigureMockMvc
 public class CustomerControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean // ✅ Replaces deprecated @MockBean
-    private CustomerService customerService;
-
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockitoBean
+    private CustomerService customerService;
+
     @Test
-    public void testRegisterCustomer_Success() throws Exception {
-        Customer customer = new Customer();
-        customer.setFirstName("Alice");
-        customer.setEmail("alice@test.com");
-        customer.setPasswordHash("password123");
+    public void testRegisterCustomer_Success_Returns201() throws Exception {
+        Customer saved = new Customer();
+        saved.setId(1L);
+        saved.setEmail("new@test.com");
 
-        Customer savedCustomer = new Customer();
-        savedCustomer.setId(1L);
-        savedCustomer.setFirstName("Alice");
-        savedCustomer.setEmail("alice@test.com");
+        when(customerService.registerCustomer(any(Customer.class))).thenReturn(saved);
 
-        when(customerService.registerCustomer(any(Customer.class))).thenReturn(savedCustomer);
+        Customer req = new Customer();
+        req.setEmail("new@test.com");
+        req.setPasswordHash("plainPass");
 
         mockMvc.perform(post("/api/customers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customer)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/customers/1")));
     }
 
     @Test
     public void testRegisterCustomer_DuplicateEmail_Returns409() throws Exception {
         Customer customer = new Customer();
         customer.setEmail("duplicate@test.com");
+        customer.setPasswordHash("x");
 
         when(customerService.registerCustomer(any(Customer.class)))
                 .thenThrow(new RuntimeException("Conflict: Email already taken"));

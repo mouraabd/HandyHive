@@ -1,47 +1,46 @@
-# 🛠️ HandyHive - Service Marketplace
+# 🛠️ HandyHive – Service Marketplace
 
-> CTU FIT - BI-TJV Semestral Project Author: Abdul Rahman Mourad Academic Year: 2025/2026
+**CTU FIT – BI-TJV Semestral Project**  
+**Author:** Abdul Rahman Mourad  
+**Academic Year:** 2025/2026
 
 ---
 
 ## 📋 Project Overview
 
-HandyHive is a full-stack client-server application designed to connect customers with local service providers (plumbers, electricians, cleaners, etc.). The system facilitates the entire booking flow, from browsing services to secure checkout and job management. It features a robust Spring Boot REST API backend with a PostgreSQL database and a responsive HTML/JS frontend.
+**HandyHive** is a full-stack client–server application that connects customers with local service providers (plumbers, electricians, cleaners, etc.). The system supports the full booking flow from browsing services to checkout, job management, and rating completed jobs.
 
-### Key Capabilities:
-
-- 🔍 Service Discovery: Customers can browse and filter services by category.
-- 👷 Provider Management: Providers can register, upload vetting documents, and manage their offerings.
-- 🛒 Booking System: Shopping cart functionality with "Urgent" job prioritization.
-- 💳 Secure Checkout: Integrated transaction simulation creating jobs and assigning providers.
-- ⭐ Rating System: Customers can rate completed jobs to ensure quality control.
+**Key Capabilities**
+- 🔍 **Service Discovery:** browse services and prices
+- 👷 **Provider Management:** providers register, choose offered services, and manage profiles
+- 🛒 **Booking & Checkout:** multi-service cart + urgent prioritization
+- 📌 **Smart Provider Matching:** providers are selected based on availability/criteria (not always the same provider)
+- ⭐ **Rating System:** customers rate completed jobs
+- 📄 **API Documentation:** Swagger / OpenAPI
 
 ---
 
 ## 🏗️ Architecture
 
-The project implements a strict three-layer architecture as required:
+The project implements the required **three-layer architecture**:
 
-### 1. Persistence Layer (Data Access)
+### 1) **Persistence Layer (Data Access)**
+- **ORM:** Hibernate (JPA)
+- **Repositories:** `CustomerRepository`, `ProviderRepository`, `ServiceRepository`, `JobRepository`, `RatingRepository`
+- **Database:** PostgreSQL 17 with persistent storage (Docker or external DB server)
+- **Many-to-Many:** Provider ↔ Service via join table `provider_services`
+- **Complex query:** JPQL aggregation for provider rating / recommendations
 
-- JPA Repositories: CustomerRepository, ProviderRepository, JobRepository, RatingRepository, ServiceRepository.
-- ORM: Hibernate for object-relational mapping.
-- Database: PostgreSQL 17 (Production) / H2 (Testing).
-- Complex Queries: JPQL used for aggregating ratings and filtering providers.
+### 2) **Business Layer (Application Logic)**
+- **Services:** `CustomerService`, `ProviderService`, `JobService`, `RatingService`
+- **Transactions:** `@Transactional` used for multi-step operations (checkout, registration updates, etc.)
+- **Rules:** duplicate email prevention, password hashing, validation, provider matching
 
-### 2. Business Layer (Application Logic)
-
-- Services: CustomerService, ProviderService, JobService, RatingService.
-- Transaction Management: @Transactional ensures data integrity during job creation and profile updates.
-- Business Rules: Duplicate email prevention, file upload handling, password encryption.
-- Security: BCrypt password encoding for both Customers and Providers.
-
-### 3. Presentation Layer (REST API)
-
-- Controllers: CustomerController, ProviderController, JobController, RatingController.
-- HTTP Methods: GET, POST, PUT, DELETE.
-- Status Codes: 200 OK, 201 Created, 400 Bad Request, 404 Not Found, 409 Conflict.
-- API Documentation: Swagger/OpenAPI 3.
+### 3) **Presentation Layer (REST API)**
+- **Controllers:** `CustomerController`, `ProviderController`, `ServiceController`, `JobController`, `RatingController`
+- **REST:** GET, POST, PUT, DELETE + proper status codes
+- **Error handling:** 400 / 404 / 409 / 415 for invalid requests (no HTTP 500 for client mistakes)
+- **Docs:** Swagger/OpenAPI 3 endpoints exposed
 
 ---
 
@@ -49,147 +48,146 @@ The project implements a strict three-layer architecture as required:
 
 ### Entities and Relationships
 
-The application uses 5 main entities with 6 database tables.
+The application uses **5 main entities** with **6 database tables** (5 entities + 1 join table):
 
-#### Entity Relationships:
-
+#### Relationships
 - **Customer → Job (One-to-Many)**
-    - One customer can book multiple jobs.
-    - Foreign key: customer_id in job table.
+    - One customer can book multiple jobs
+    - FK: `customer_id` in `job`
 
 - **Provider → Job (One-to-Many)**
-    - One provider can perform multiple jobs.
-    - Foreign key: provider_id in job table.
+    - One provider can perform multiple jobs
+    - FK: `provider_id` in `job`
 
-- **Provider ↔ Service (Many-to-Many via Join Table)**
-    - A provider can offer multiple services (e.g., Plumbing and Handyman).
-    - A service is offered by multiple providers.
-    - Join Table: provider_services.
+- **Provider ↔ Service (Many-to-Many)**
+    - Provider offers many services; service can be offered by many providers
+    - Join table: `provider_services`
 
 - **Job → Rating (One-to-One)**
-    - A completed job can have one rating associated with it.
-    - Foreign key: job_id in rating table.
+    - Completed job can have one rating
+    - FK: `job_id` in `rating`
 
-### 1. Customer
-
+### 1) Customer
 Represents a client seeking services.
 
-Attributes: id, firstName, lastName, email, passwordHash, phoneNumber, role.
+**Attributes (typical):**
+- `id`, `firstName`, `lastName`, `email`, `passwordHash`, `phoneNumber`, `role`
 
-### 2. Provider
-
+### 2) Provider
 Represents a professional offering services.
 
-Attributes: providerId, firstName, lastName, email, passwordHash, bio, vettingDocPath, isVetted, avgRating.
+**Attributes (typical):**
+- `providerId`, `firstName`, `lastName`, `email`, `passwordHash`, `bio`, `vettingDocPath`, `isVetted`, `avgRating`
 
-### 3. Job
+### 3) Service
+Represents a service category offered in the catalog.
 
-Represents a service contract.
+**Attributes (typical):**
+- `serviceId`, `name`, `description`, `basePrice`
 
-Attributes: jobId, description, isUrgent, status (PENDING, COMPLETED), dateCreated.
+### 4) Job
+Represents a booking / service contract created by checkout.
 
-### 4. Service
+**Attributes (typical):**
+- `jobId`, `description`, `isUrgent`, `status` (PENDING/COMPLETED/CANCELLED), `dateCreated`
 
-Represents the catalog of available skills.
+### 5) Rating
+Feedback left by the customer for a completed job.
 
-Attributes: serviceId, name, basePrice, description.
-
-### 5. Rating
-
-Feedback left by a customer.
-
-Attributes: ratingId, score (Double), comment.
+**Attributes (typical):**
+- `ratingId`, `score`, `comment`
 
 ---
 
 ## ⚙️ Technologies
 
 ### Backend
-
-- Java 21 - Programming language.
-- Spring Boot 3.4.1 - Application framework.
-- Hibernate - ORM implementation.
-- PostgreSQL 17 - Relational database.
-- Gradle 8.14 - Build tool.
+- **Java 21**
+- **Spring Boot 3.4.1**
+- **Hibernate / Spring Data JPA**
+- **PostgreSQL 17**
+- **Gradle 8.14**
+- **OpenAPI / Swagger**
 
 ### Frontend
+- **HTML5**
+- **CSS3 / Bootstrap 5**
+- **JavaScript (ES6)**
 
-- HTML5 - Structure.
-- CSS3 / Bootstrap 5 - Styling.
-- JavaScript (ES6) - Client-side logic.
-
-### Development
-
-- Docker - Containerization.
-- GitLab CI/CD - Automated testing.
-- JUnit 5 & Mockito - Testing framework.
+### Development & Deployment
+- **Docker & Docker Compose**
+- **GitLab versioning**
+- **JUnit 5 + Mockito** for automated tests
 
 ---
 
 ## 🚀 Key Features
 
 ### ✅ Complete CRUD Operations
+Full CRUD is implemented for:
+- **Customers**
+- **Providers**
+- **Services**
+- **Jobs**
+- **Ratings**
+- ✅ plus CRUD operations over the **Provider ↔ Service** many-to-many association
 
-**Provider Management:**
+---
 
-- Create/Register providers.
-- Read provider profiles.
-- Update details (Bio, Phone).
-- Delete accounts.
+## ⭐ Complex Business Operation (Client)
 
-**Job Management:**
+### Multi-Service Checkout + Provider Assignment
+**Business operation:** a customer selects **multiple services** (cart), optionally marks the order as **urgent**, and then performs checkout.
 
-- Create jobs (Booking).
-- Read jobs (History).
-- Update status (Completion).
+This single action triggers **multiple CRUD operations** through multiple API calls:
+1. Fetch selected services (READ)
+2. Find/choose matching providers for each service (READ + complex logic)
+3. Create one or more jobs (CREATE)
+4. Assign provider(s) to each job (UPDATE / association)
+5. Return job confirmations (READ)
 
-### ⭐ Complex Business Operation: Provider Registration with File
+This is the required complex client operation composed of multiple server calls.
 
-Endpoint: POST /api/providers (Multipart Request)
+---
 
-This operation demonstrates handling binary data alongside structured data:
+## 🔍 Complex JPQL Query (ORM)
 
-- Validation: Checks if email exists.
-- File Processing: Saves the uploaded PDF/Image to server storage.
-- Security: Hashes the password.
-- Persistence: Saves entity with file path reference.
+The backend contains at least one **JPQL query** that goes beyond basic CRUD.
 
-### 🔍 Complex JPQL Query
+Example query goal:
+- **Aggregate ratings** for a provider (average score), used in provider recommendations.
 
-Query: calculateAverageRatingByProviderId Location: RatingRepository.java
-
+**Location:** `RatingRepository.java`  
+**Example JPQL:**
 ```java
 @Query("SELECT AVG(r.score) FROM Rating r WHERE r.provider.providerId = :providerId")
 Double calculateAverageRatingByProviderId(Long providerId);
 ```
 
-Value: Efficiently aggregates scores at the database level instead of loading thousands of rating objects into Java memory.
+This performs aggregation directly in the database (efficient) and supports recommendation logic.
 
-### 🔗 Many-to-Many Relationship
+---
 
-Implementation: Provider ↔ Service
+## 🔗 Many-to-Many Relationship
 
-Providers can have multiple skills, and a skill (like "Plumbing") belongs to many providers.
+### Provider ↔ Service via `provider_services`
 
-Database Structure:
-
+**Database table**
 ```sql
 CREATE TABLE provider_services (
-provider_id BIGINT REFERENCES provider(provider_id),
-service_id BIGINT REFERENCES service(service_id),
-PRIMARY KEY (provider_id, service_id)
+  provider_id BIGINT REFERENCES provider(provider_id),
+  service_id  BIGINT REFERENCES service(service_id),
+  PRIMARY KEY (provider_id, service_id)
 );
 ```
 
-Java Implementation:
-
+**Java (Provider entity)**
 ```java
-// In Provider entity
 @ManyToMany
 @JoinTable(
-name = "provider_services",
-joinColumns = @JoinColumn(name = "provider_id"),
-inverseJoinColumns = @JoinColumn(name = "service_id")
+  name = "provider_services",
+  joinColumns = @JoinColumn(name = "provider_id"),
+  inverseJoinColumns = @JoinColumn(name = "service_id")
 )
 private Set<Service> services = new HashSet<>();
 ```
@@ -198,82 +196,88 @@ private Set<Service> services = new HashSet<>();
 
 ## 📡 API Endpoints
 
-### User Management
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/customers` | Register customer |
-| GET | `/api/customers/{id}` | Get profile |
+### Swagger / OpenAPI
+- **Swagger UI:** `http://localhost:8082/swagger-ui/index.html`
+- **OpenAPI JSON:** `http://localhost:8082/v3/api-docs`
 
-### Provider Management
+### Services (`/api/services`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/providers` | Register (Multipart) |
-| GET | `/api/providers` | List all providers |
-| PUT | `/api/providers/{id}` | Update profile |
+| POST | `/api/services` | Create service (**201 Created**) |
+| GET | `/api/services` | List services |
+| GET | `/api/services/{id}` | Get service by ID |
+| PUT | `/api/services/{id}` | Update service |
+| DELETE | `/api/services/{id}` | Delete service |
 
-### Job System
+### Customers (`/api/customers`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/jobs` | Create Job |
-| GET | `/api/jobs/user/{id}` | Customer History |
-| GET | `/api/jobs/provider/{id}` | Provider History |
-| POST | `/api/jobs/{id}/rating` | Rate a job |
+| POST | `/api/customers` | Register customer (**201 Created**) |
+| GET | `/api/customers` | List customers |
+| GET | `/api/customers/{id}` | Get customer |
+| PUT | `/api/customers/{id}` | Update customer |
+| DELETE | `/api/customers/{id}` | Delete customer |
+
+### Providers (`/api/providers`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/providers` | Register provider (multipart, **201 Created**) |
+| GET | `/api/providers` | List providers |
+| GET | `/api/providers/{id}` | Get provider |
+| PUT | `/api/providers/{id}` | Update provider |
+| DELETE | `/api/providers/{id}` | Delete provider |
+| GET | `/api/providers/recommendations?serviceId={id}` | Recommended providers (complex query) |
+
+### Provider ↔ Service association
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/providers/{providerId}/services` | List provider services |
+| PUT | `/api/providers/{providerId}/services` | Replace provider services (list of IDs) |
+| PUT | `/api/providers/{providerId}/services/{serviceId}` | Add service to provider (**204**) |
+| DELETE | `/api/providers/{providerId}/services/{serviceId}` | Remove service from provider (**204**) |
+
+### Jobs (`/api/jobs`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/jobs` | Create job (used by checkout) |
+| GET | `/api/jobs/customer/{customerId}` | Customer job history |
+| GET | `/api/jobs/provider/{providerId}` | Provider job history |
+| PUT | `/api/jobs/{jobId}` | Update job (status/fields) |
+| DELETE | `/api/jobs/{jobId}` | Delete job |
+
+### Ratings
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/jobs/{jobId}/rating` | Create rating for job |
+| GET | `/api/ratings` | List ratings |
+| GET | `/api/ratings/{id}` | Get rating |
+| DELETE | `/api/ratings/{id}` | Delete rating |
+
+**Status codes used**
+- `200 OK`, `201 Created`, `204 No Content`
+- `400 Bad Request`, `404 Not Found`, `409 Conflict`, `415 Unsupported Media Type`
 
 ---
 
 ## 🧪 Testing
 
-
-The project includes 31 Automated Tests covering all layers.
+The project includes automated tests covering different layers:
 
 ### 1️⃣ Unit Tests (Service Layer)
-
-File: ProviderServiceTest.java
-
-Approach: Uses Mockito to verify business logic without database.
-
-```java
-@Test
-void testRegisterProvider_Success() {
-when(providerRepository.save(any())).thenReturn(new Provider());
-providerService.registerProvider(new Provider());
-verify(providerRepository).save(any());
-}
-```
+- Example: `ProviderServiceTest.java`
+- **Mockito** used to mock repositories and test business logic in isolation
 
 ### 2️⃣ Repository Tests (Data Layer)
+- Example: `RatingRepositoryTest.java`
+- Uses `@DataJpaTest` to validate JPQL queries
 
-File: RatingRepositoryTest.java
+### 3️⃣ Controller / Integration Tests (API Layer)
+- Example: `JobControllerTest.java`
+- Uses MockMvc / Spring Boot test utilities to verify REST behavior and status codes
 
-Approach: Uses @DataJpaTest with H2 to verify JPQL queries.
-
-```java
-@Test
-void testCalculateAverageRating() {
-Double avg = ratingRepository.calculateAverageRatingByProviderId(1L);
-assertThat(avg).isEqualTo(4.0);
-}
-```
-
-### 3️⃣ Integration Tests (Controller Layer)
-
-File: JobControllerTest.java
-
-Approach: Uses MockMvc to test HTTP status codes and JSON.
-
-```java
-@Test
-void testCreateJob() throws Exception {
-mockMvc.perform(post("/api/jobs")
-.contentType(MediaType.APPLICATION_JSON)
-.content(json))
-.andExpect(status().isOk());
-}
-```
-
-### Running Tests
-
+### Running tests
 ```bash
+cd HandyHive-Backend
 ./gradlew test
 ```
 
@@ -281,55 +285,87 @@ mockMvc.perform(post("/api/jobs")
 
 ## 🐳 Docker Deployment
 
-### Quick Start
-
-You can spin up the entire environment (Database + Application) using Docker Compose.
-
+### Quick Start (Recommended)
+From project root:
 ```bash
-# Start services
-docker-compose up --build
-
-# Stop services
-docker-compose down
+docker compose up -d --build
 ```
 
-Configuration (docker-compose.yml)
+**Backend API:** `http://localhost:8082`  
+**Swagger UI:** `http://localhost:8082/swagger-ui/index.html`
 
-PostgreSQL: Official postgres:15-alpine image.
+Stop:
+```bash
+docker compose down
+```
 
-Application: Builds from local source.
+**Notes**
+- PostgreSQL runs as a DB server container with persistent volume
+- The backend uses environment variables from `.env` (if present)
 
-Port: Backend is accessible at http://localhost:8082.
+---
+
+## 🔧 Manual Setup (Without Docker)
+
+### Prerequisites
+- **Java 21**
+- **PostgreSQL 17** (DB server)
+- **Gradle Wrapper** included in project
+
+### Database
+Create a database/user in PostgreSQL and set the credentials in `application.properties` (or via env vars).
+
+### Run Backend
+```bash
+cd HandyHive-Backend
+./gradlew bootRun
+```
+
+Backend will run at: `http://localhost:8082`
+
+---
+
+## 🌐 Client Application (Frontend)
+
+### Run the Client
+The frontend is a static web app (HTML/CSS/JS). You can open it directly or serve it:
+
+**Option 1: open HTML**
+- Open `HandyHive-Frontend/index.html` in the browser
+
+**Option 2: local HTTP server**
+```bash
+cd HandyHive-Frontend
+python -m http.server 63342
+```
+Then open:
+- `http://localhost:63342`
+
+The client uses the backend REST API at `http://localhost:8082`.
 
 ---
 
 ## 📚 API Usage Examples
 
-### 1. Create a Job
-
-Request: POST /api/jobs
-
-```json
-{
-  "userId": 1,
-  "providerId": 5,
-  "serviceId": 2,
-  "description": "Leaking faucet",
-  "isUrgent": true
-}
+### Example: Create Service (Windows PowerShell)
+```powershell
+$payload = @{ name = "Plumbing"; description="Fix pipes"; basePrice=500 } | ConvertTo-Json -Compress
+$payload | Set-Content -NoNewline -Encoding utf8 payload.json
+curl.exe -i -X POST "http://localhost:8082/api/services" -H "Content-Type: application/json" --data-binary "@payload.json"
 ```
 
-Response: 200 OK
-
-### 2. Register Provider
-**Request:** `POST /api/providers` (Multipart)
-```text
-firstName: "John"
-email: "john@work.com"
-password: "secure123"
-document: [Binary File]
+### Example: Provider registration (multipart)
+```powershell
+curl.exe -i -X POST "http://localhost:8082/api/providers" `
+  -F "firstName=John" `
+  -F "lastName=Doe" `
+  -F "email=john@example.com" `
+  -F "password=pass" `
+  -F "phone=+420700000000" `
+  -F "bio=Experienced provider" `
+  -F "serviceIds=1" `
+  -F "serviceIds=2"
 ```
-Response: 200 OK
 
 ---
 
@@ -337,59 +373,61 @@ Response: 200 OK
 
 ```text
 HandyHive-Project/
-├── .idea/                       # IDE Configuration
-├── HandyHive-Backend/           # Backend Source Code
-│   ├── build.gradle             # Dependencies
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/handyhive/backend/
-│   │   │   │   ├── config/      # App Config
-│   │   │   │   ├── controller/  # REST Controllers
-│   │   │   │   ├── dto/         # Data Transfer Objects
-│   │   │   │   ├── exception/   # Global Error Handling
-│   │   │   │   ├── model/       # JPA Entities
-│   │   │   │   ├── repository/  # Data Access Interfaces
-│   │   │   │   ├── service/     # Business Logic
-│   │   │   │   └── util/        # Helper classes
-│   │   │   └── resources/
-│   │   │       └── application.properties
-│   │   └── test/                # Unit & Integration Tests
-│   └── uploads/                 # Storage for vetted documents
+├── HandyHive-Backend/
+│   ├── src/main/java/com/handyhive/backend/
+│   │   ├── config/
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── exception/
+│   │   ├── model/
+│   │   ├── repository/
+│   │   ├── service/
+│   │   └── util/
+│   ├── src/main/resources/
+│   │   └── application.properties
+│   ├── src/test/
 │   └── Dockerfile
-├── HandyHive-Frontend/          # Frontend Source Code
+├── HandyHive-Frontend/
 │   ├── css/
 │   ├── js/
-│   ├── index.html
-│   └── checkout.html
-├── .gitlab-ci.yml               # CI/CD Pipeline Config
-├── docker-compose.yml           # Docker Orchestration
-└── README.md                    # Project Documentation
+│   └── *.html
+├── docker-compose.yml
+├── .env
+└── README.md
 ```
 
 ---
 
 ## 🎓 Academic Requirements Met
 
-### Server Requirements
+### ✅ Server Requirements
+- [x] Three-layer architecture (Persistence / Business / REST API)
+- [x] Spring Framework in Java
+- [x] ORM (Hibernate/JPA)
+- [x] Relational DB server (PostgreSQL) with persistent storage
+- [x] At least 3 entities (5 entities implemented)
+- [x] Many-to-many association (Provider ↔ Service) + CRUD over association
+- [x] Complex JPQL query (aggregation / recommendation support)
+- [x] Proper REST (methods + correct HTTP status codes)
+- [x] No HTTP 500 for invalid client requests (4xx instead)
+- [x] OpenAPI documentation
+- [x] Automated tests (3 types)
+- [x] Gradle build with tests
+- [x] Git versioned project (GitLab)
 
-- [x] Three-layer architecture: Persistence, Business, Presentation.
-- [x] Spring Framework: Spring Boot 3.4.1, Java 21.
-- [x] Relational Database: PostgreSQL 17.
-- [x] Entities: 5 Entities + M:N relationship.
-- [x] Complex Query: JPQL Aggregation in RatingRepository.
-- [x] Testing: 31 Tests (Unit + Integration + Repository).
-- [x] Build System: Gradle.
-
-### Client Requirements
-
-- [x] User Interface: Web-based HTML/JS.
-- [x] REST Integration: Fetch API used for all operations.
-- [x] Complex Operation: Multi-step Checkout & File Upload.
+### ✅ Client Requirements
+- [x] UI application (HTML/JS frontend)
+- [x] Uses REST API as backend
+- [x] Complex operation: checkout performs multiple calls and creates jobs
 
 ---
 
 ## 👨‍💻 Author
 
-Abdul Rahman Mourad Czech Technical University in Prague Faculty of Information Technology Course: BI-TJV (Java Technologies)
+**Abdul Rahman Mourad**  
+Czech Technical University in Prague  
+Faculty of Information Technology  
+Course: BI-TJV (Java Technologies)
 
-Last Updated: January 4, 2026 Status: ✅ Production Ready - All Tests Passing (31/31)
+**Last Updated:** January 2026  
+**Status:** ✅ Ready for submission

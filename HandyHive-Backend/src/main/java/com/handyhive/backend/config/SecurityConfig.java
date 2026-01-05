@@ -39,11 +39,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/services/**").permitAll()
                         .requestMatchers("/api/providers/**", "/api/customers/**").permitAll()
                         .requestMatchers("/api/jobs/**").permitAll()
+                        .requestMatchers("/api/ratings/**").permitAll()
+                        .requestMatchers("/api/subscriptions/**").permitAll()
+                        .requestMatchers("/api/users/**").permitAll()
 
-                        // 2. ✅ FIX: Allow Swagger UI & API Docs (This fixes the 403 error)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-
-                        // 3. Lock down everything else
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(jpaUserDetailsService)

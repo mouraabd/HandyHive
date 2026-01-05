@@ -3,7 +3,8 @@ package com.handyhive.backend.exception;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.HttpRequestMethodNotSupportedException; // ✅ IMPORT THIS
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,50 +18,72 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Not Found (404)
+    // 404
     @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class})
     public ResponseEntity<?> handleNotFound(Exception ex, WebRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
     }
 
-    // 2. Bad Request (400) - Validation
+    // 400 - validation / illegal arguments
     @ExceptionHandler({IllegalArgumentException.class, MethodArgumentNotValidException.class})
     public ResponseEntity<?> handleBadRequest(Exception ex, WebRequest request) {
         String message = ex.getMessage();
-        if (ex instanceof MethodArgumentNotValidException) {
-            message = "Validation failed: " + ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError().getDefaultMessage();
+        if (ex instanceof MethodArgumentNotValidException manv && manv.getBindingResult().getFieldError() != null) {
+            message = "Validation failed: " + manv.getBindingResult().getFieldError().getDefaultMessage();
         }
         return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", message);
     }
 
-    // 3. Conflict (409) - Duplicates from Database or Service
-    @ExceptionHandler({DataIntegrityViolationException.class})
-    public ResponseEntity<?> handleDatabaseConflict(Exception ex, WebRequest request) {
-        return buildResponse(HttpStatus.CONFLICT, "Conflict", "This email is already registered.");
+    // ✅ 415 - invalid content type (fixes your current 500)
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<?> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex, WebRequest request) {
+        String supported = (ex.getSupportedMediaTypes() == null || ex.getSupportedMediaTypes().isEmpty())
+                ? ""
+                : " Supported: " + ex.getSupportedMediaTypes();
+        return buildResponse(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                "Unsupported Media Type",
+                "Content-Type '" + ex.getContentType() + "' is not supported." + supported
+        );
     }
 
-    // 4. Runtime Logic Errors (409 or 400)
+    // 405
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<?> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+        return buildResponse(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "Method Not Allowed",
+                "Request method '" + ex.getMethod() + "' is not supported for this URL."
+        );
+    }
+
+    // 409 - DB constraint violations (make message generic, not “email” only)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleDatabaseConflict(DataIntegrityViolationException ex, WebRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", "Database constraint violation (duplicate or invalid reference).");
+    }
+
+    // 400/409 from your own runtime checks
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex, WebRequest request) {
-        if (ex.getMessage() != null &&
-                (ex.getMessage().toLowerCase().contains("conflict") ||
-                        ex.getMessage().toLowerCase().contains("already taken"))) {
-            return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage());
+        if (ex.getMessage() != null) {
+            String m = ex.getMessage().toLowerCase();
+            if (m.contains("conflict") || m.contains("already")) {
+                return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage());
+            }
         }
         return buildResponse(HttpStatus.BAD_REQUEST, "Request Error", ex.getMessage());
     }
 
-    // ✅ 5. Method Not Allowed (405) - Fixes the "POST not supported" 500 error
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<?> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, WebRequest request) {
-        return buildResponse(HttpStatus.METHOD_NOT_ALLOWED, "Method Not Allowed", "Request method '" + ex.getMethod() + "' is not supported for this URL.");
-    }
-
-    // 6. Catch-All Server Error (500)
+    // 500 only for real server problems
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGlobalException(Exception ex, WebRequest request) {
         ex.printStackTrace();
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", "Unexpected: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Server Error",
+                "Unexpected: " + ex.getClass().getSimpleName() + " - " + ex.getMessage()
+        );
     }
 
     private ResponseEntity<Object> buildResponse(HttpStatus status, String error, String message) {

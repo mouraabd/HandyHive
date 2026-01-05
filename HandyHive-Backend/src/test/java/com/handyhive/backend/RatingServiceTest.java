@@ -1,6 +1,8 @@
 package com.handyhive.backend;
 
+import com.handyhive.backend.dto.RatingRequestDTO;
 import com.handyhive.backend.model.Job;
+import com.handyhive.backend.model.JobStatus;
 import com.handyhive.backend.model.Provider;
 import com.handyhive.backend.model.Rating;
 import com.handyhive.backend.repository.JobRepository;
@@ -15,48 +17,91 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class RatingServiceTest {
 
-    @Mock private RatingRepository ratingRepository;
-    @Mock private JobRepository jobRepository;
-    @Mock private ProviderRepository providerRepository;
+    @Mock
+    private RatingRepository ratingRepository;
 
-    @InjectMocks private RatingService ratingService;
+    @Mock
+    private JobRepository jobRepository;
+
+    @Mock
+    private ProviderRepository providerRepository;
+
+    @InjectMocks
+    private RatingService ratingService;
 
     @Test
-    public void testAddRating_Success() {
-        // 1. Arrange
-        Long jobId = 100L;
-        Job mockJob = new Job();
-        mockJob.setJobId(jobId);
+    void createRating_completedJob_savesAndUpdatesProviderAvg() {
+        Long jobId = 1L;
 
-        Provider mockProvider = new Provider();
-        mockProvider.setProviderId(50L);
-        mockJob.setProvider(mockProvider);
+        Provider provider = new Provider();
+        provider.setProviderId(2L);
+        provider.setIsVetted(true);
 
-        Rating inputRating = new Rating();
-        inputRating.setScore(5.0); // ✅ FIXED: Use 5.0 (Double)
-        inputRating.setComment("Great job!");
+        Job job = new Job();
+        job.setJobId(jobId);
+        job.setStatus(JobStatus.COMPLETED);
+        job.setProvider(provider);
+        job.setRating(null);
 
-        when(jobRepository.findById(jobId)).thenReturn(Optional.of(mockJob));
-        when(ratingRepository.save(any(Rating.class))).thenAnswer(i -> i.getArguments()[0]);
+        RatingRequestDTO dto = new RatingRequestDTO();
+        dto.setJobId(jobId);
+        dto.setScore(5.0);
+        dto.setComment("Great!");
 
-        // 2. Act
-        Rating result = ratingService.addRating(jobId, inputRating);
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
 
-        // 3. Assert
+        // save returns the entity (with ID set)
+        when(ratingRepository.save(any(Rating.class))).thenAnswer(inv -> {
+            Rating r = inv.getArgument(0);
+            r.setRatingId(10L);
+            return r;
+        });
+
+        when(ratingRepository.calculateAverageRatingByProviderId(2L)).thenReturn(4.2);
+        when(providerRepository.save(any(Provider.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Rating result = ratingService.createRating(dto);
+
         assertNotNull(result);
-        assertEquals(5.0, result.getScore()); // ✅ FIXED: Use 5.0
-        assertEquals(mockJob, result.getJob());
-        assertEquals(mockProvider, result.getProvider());
+        assertEquals(10L, result.getRatingId());
+        assertEquals(5.0, result.getScore());
+        assertEquals("Great!", result.getComment());
+        assertEquals(job, result.getJob());
+        assertEquals(provider, result.getProvider());
+
+        // provider avg updated
+        assertEquals(4.2, provider.getAvgRating());
 
         verify(ratingRepository).save(any(Rating.class));
+        verify(providerRepository, atLeastOnce()).save(any(Provider.class));
+    }
+
+    @Test
+    void createRating_notCompleted_throws() {
+        Long jobId = 1L;
+
+        Provider provider = new Provider();
+        provider.setProviderId(2L);
+
+        Job job = new Job();
+        job.setJobId(jobId);
+        job.setStatus(JobStatus.PENDING);
+        job.setProvider(provider);
+
+        RatingRequestDTO dto = new RatingRequestDTO();
+        dto.setJobId(jobId);
+        dto.setScore(3.0);
+
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+
+        assertThrows(IllegalStateException.class, () -> ratingService.createRating(dto));
+        verify(ratingRepository, never()).save(any());
     }
 }

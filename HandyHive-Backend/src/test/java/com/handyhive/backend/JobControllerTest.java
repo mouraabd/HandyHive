@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean; // ✅ New Annotation
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -18,8 +18,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,14 +27,14 @@ public class JobControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean // ✅ Replaces deprecated @MockBean
-    private JobService jobService;
-
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockitoBean
+    private JobService jobService;
+
     @Test
-    public void testCreateJobEndpoint() throws Exception {
+    public void testCreateJobEndpoint_Returns201() throws Exception {
         Job mockJob = new Job();
         mockJob.setJobId(1L);
         mockJob.setStatus(JobStatus.PENDING);
@@ -52,7 +51,8 @@ public class JobControllerTest {
         mockMvc.perform(post("/api/jobs")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/jobs/1")))
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
 

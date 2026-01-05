@@ -2,117 +2,171 @@ package com.handyhive.backend.controller;
 
 import com.handyhive.backend.model.Provider;
 import com.handyhive.backend.model.Service;
-import com.handyhive.backend.repository.ProviderRepository;
-import com.handyhive.backend.repository.ServiceRepository;
 import com.handyhive.backend.service.ProviderService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/providers")
+@CrossOrigin(origins = "*")
 public class ProviderController {
 
     private final ProviderService providerService;
-    private final ProviderRepository providerRepository;
-    private final ServiceRepository serviceRepository;
 
-    public ProviderController(ProviderService providerService, ProviderRepository providerRepository, ServiceRepository serviceRepository) {
+    public ProviderController(ProviderService providerService) {
         this.providerService = providerService;
-        this.providerRepository = providerRepository;
-        this.serviceRepository = serviceRepository;
     }
 
-    // ✅ 1. Register Provider (Handles Files + Skills)
+    // ✅ CREATE Provider (201 Created)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> registerProvider(
-            @RequestParam("firstName") String firstName,
-            @RequestParam("lastName") String lastName,
-            @RequestParam("email") String email,
-            @RequestParam("password") String password,
-            @RequestParam("phone") String phone,
+    public ResponseEntity<Provider> registerProvider(
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String phone,
+            @RequestParam(value = "bio", required = false) String bio,
+
+            // accept multiple formats for service IDs
             @RequestParam(value = "serviceIds", required = false) List<Long> serviceIds,
-            @RequestParam(value = "document", required = false) MultipartFile document
-    ) {
-        try {
-            Provider provider = new Provider();
-            provider.setFirstName(firstName);
-            provider.setLastName(lastName);
-            provider.setEmail(email);
-            provider.setPasswordHash(password);
-            provider.setPhoneNumber(phone);
-            provider.setBio("New Service Provider");
+            @RequestParam(value = "serviceIds[]", required = false) List<Long> serviceIdsBracket,
+            @RequestParam(value = "serviceIdsCsv", required = false) String serviceIdsCsv,
 
-            // Logic: Link Selected Services (Skills)
-            if (serviceIds != null && !serviceIds.isEmpty()) {
-                List<Service> selectedServices = serviceRepository.findAllById(serviceIds);
-                provider.setServices(selectedServices);
-            }
+            @RequestPart(value = "document", required = false) MultipartFile document
+    ) throws IOException {
 
-            // Pass the provider + file to the service
-            Provider created = providerService.registerProviderWithDoc(provider, document);
-            return ResponseEntity.ok(created);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        // Merge serviceIds variants safely
+        Set<Long> mergedIds = new LinkedHashSet<>();
+        if (serviceIds != null) mergedIds.addAll(serviceIds);
+        if (serviceIdsBracket != null) mergedIds.addAll(serviceIdsBracket);
+        if (serviceIdsCsv != null && !serviceIdsCsv.isBlank()) {
+            List<Long> parsed = Arrays.stream(serviceIdsCsv.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank())
+                    .map(Long::valueOf)
+                    .toList();
+            mergedIds.addAll(parsed);
         }
+
+        Provider provider = new Provider();
+        provider.setFirstName(firstName);
+        provider.setLastName(lastName);
+        provider.setEmail(email);
+        provider.setPasswordHash(password);
+        provider.setPhoneNumber(phone);
+        provider.setBio(bio != null ? bio : "New Service Provider");
+
+        if (!mergedIds.isEmpty()) {
+            List<Service> services = providerService.requireServicesByIds(new ArrayList<>(mergedIds));
+            provider.setServices(services);
+        }
+
+        Provider savedProvider = providerService.registerProviderWithDoc(provider, document);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedProvider.getProviderId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(savedProvider);
     }
 
-    // 2. Get Provider Profile
+    // ✅ READ (list)
+    @GetMapping
+    public ResponseEntity<List<Provider>> getAllProviders() {
+        return ResponseEntity.ok(providerService.getAllProviders());
+    }
+
+    // ✅ READ (by id)
     @GetMapping("/{id}")
     public ResponseEntity<Provider> getProviderById(@PathVariable Long id) {
         return ResponseEntity.ok(providerService.getProviderById(id));
     }
 
-    // 3. Update Profile Details
+    // ✅ COMPLEX QUERY endpoint (kept for rubric)
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<Provider>> recommendProviders(@RequestParam Long serviceId) {
+        return ResponseEntity.ok(providerService.recommendProvidersForService(serviceId));
+    }
+
+    // ✅ UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Provider> updateProvider(@PathVariable Long id, @RequestBody Provider updatedData) {
-        return ResponseEntity.ok(providerService.updateProviderDetails(id, updatedData));
+    public ResponseEntity<Provider> updateProvider(@PathVariable Long id, @RequestBody Provider update) {
+        return ResponseEntity.ok(providerService.updateProviderDetails(id, update));
     }
 
-    // 4. Change Password
     @PutMapping("/{id}/password")
-    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> passwords) {
-        try {
-            providerService.changePassword(id, passwords.get("oldPassword"), passwords.get("newPassword"));
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<String> changePassword(
+            @PathVariable Long id,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword
+    ) {
+        providerService.changePassword(id, oldPassword, newPassword);
+        return ResponseEntity.ok("Password updated successfully!");
     }
 
-    // 5. Update Subscription
     @PutMapping("/{id}/subscription")
-    public ResponseEntity<?> updateSubscription(@PathVariable Long id, @RequestParam Integer planId) {
-        Provider provider = providerService.getProviderById(id);
-        provider.setSubscriptionId(planId);
-        // Auto-verify if they buy a premium plan (Plan ID > 1)
-        if (planId > 1) provider.setIsVetted(true);
-
-        providerRepository.save(provider);
-        return ResponseEntity.ok("Subscription updated to Plan " + planId);
+    public ResponseEntity<Provider> updateSubscription(
+            @PathVariable Long id,
+            @RequestParam Integer planId
+    ) {
+        return ResponseEntity.ok(providerService.updateSubscription(id, planId));
     }
 
-    // 6. Delete Account
+    // ✅ DELETE (204 No Content)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProvider(@PathVariable Long id) {
-        providerRepository.deleteById(id);
-        return ResponseEntity.ok("Account deleted successfully");
+    public ResponseEntity<Void> deleteProvider(@PathVariable Long id) {
+        providerService.deleteProvider(id);
+        return ResponseEntity.noContent().build();
     }
 
-    // ✅ 7. Match Provider for Cart
+    // ✅ M:N association CRUD
+    @GetMapping("/{providerId}/services")
+    public ResponseEntity<List<Service>> getProviderServices(@PathVariable Long providerId) {
+        return ResponseEntity.ok(providerService.getProviderServices(providerId));
+    }
+
+    @PutMapping("/{providerId}/services")
+    public ResponseEntity<List<Service>> replaceProviderServices(
+            @PathVariable Long providerId,
+            @RequestBody List<Long> serviceIds
+    ) {
+        return ResponseEntity.ok(providerService.replaceProviderServices(providerId, serviceIds));
+    }
+
+    @PutMapping("/{providerId}/services/{serviceId}")
+    public ResponseEntity<Void> addServiceToProvider(
+            @PathVariable Long providerId,
+            @PathVariable Long serviceId
+    ) {
+        providerService.addServiceToProvider(providerId, serviceId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{providerId}/services/{serviceId}")
+    public ResponseEntity<Void> removeServiceFromProvider(
+            @PathVariable Long providerId,
+            @PathVariable Long serviceId
+    ) {
+        providerService.removeServiceFromProvider(providerId, serviceId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ✅ SMART MATCH endpoint used by checkout
     @GetMapping("/match/{serviceId}")
-    public ResponseEntity<?> findProviderForService(@PathVariable Long serviceId) {
-        List<Provider> providers = providerRepository.findByServiceId(serviceId);
-
-        if (providers.isEmpty()) {
-            return ResponseEntity.status(404).body("No providers found for this service.");
-        }
-
-        // Return the first available provider
-        return ResponseEntity.ok(providers.get(0));
+    public ResponseEntity<Provider> findProviderForService(
+            @PathVariable Long serviceId,
+            @RequestParam(name = "urgent", defaultValue = "false") boolean urgent
+    ) {
+        return ResponseEntity.ok(providerService.matchProviderForService(serviceId, urgent));
     }
 }

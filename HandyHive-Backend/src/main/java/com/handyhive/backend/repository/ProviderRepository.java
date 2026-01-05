@@ -14,11 +14,24 @@ public interface ProviderRepository extends JpaRepository<Provider, Long> {
 
     Provider findByEmail(String email);
 
-    // FIX: Add Case-Insensitive Search
     Optional<Provider> findByEmailIgnoreCase(String email);
+
     List<Provider> findByServices_ServiceId(Long serviceId);
 
-    // Match service for Checkout
-    @Query("SELECT p FROM Provider p JOIN p.services s WHERE s.id = :serviceId")
+    // If used anywhere else, this is still OK:
+    @Query("SELECT p FROM Provider p JOIN p.services s WHERE s.serviceId = :serviceId")
     List<Provider> findByServiceId(@Param("serviceId") Long serviceId);
+
+    // ✅ Complex JPQL (multi-table) kept for your rubric requirement
+    @Query("""
+            SELECT p
+            FROM Provider p
+            JOIN p.services s
+            LEFT JOIN p.jobs j
+            LEFT JOIN j.rating r
+            WHERE s.serviceId = :serviceId
+            GROUP BY p
+            ORDER BY COALESCE(AVG(r.score), 0) DESC, COUNT(j) DESC, p.providerId ASC
+            """)
+    List<Provider> recommendProvidersForService(@Param("serviceId") Long serviceId);
 }

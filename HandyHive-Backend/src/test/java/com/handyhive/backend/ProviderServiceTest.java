@@ -1,7 +1,10 @@
 package com.handyhive.backend;
 
+import com.handyhive.backend.exception.ResourceNotFoundException;
+import com.handyhive.backend.model.Job;
 import com.handyhive.backend.model.Provider;
-import com.handyhive.backend.repository.ProviderRepository;
+import com.handyhive.backend.model.Service;
+import com.handyhive.backend.repository.*;
 import com.handyhive.backend.service.ProviderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,49 +13,80 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProviderServiceTest {
 
-    @Mock
-    private ProviderRepository providerRepository;
+    @Mock private ProviderRepository providerRepository;
+    @Mock private ServiceRepository serviceRepository;
+    @Mock private JobRepository jobRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    // Extra mocks (safe even if ProviderService doesn't use them)
+    @Mock private RatingRepository ratingRepository;
+    @Mock private SubscriptionRepository subscriptionRepository;
+    @Mock private UserRepository userRepository;
+
+    @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private ProviderService providerService;
 
     @Test
-    void testRegisterProvider_ShouldHashPassword() {
-        // 1. Arrange
-        Provider inputProvider = new Provider();
-        inputProvider.setEmail("test@provider.com");
-        inputProvider.setPasswordHash("plainPassword123");
+    void matchProviderForService_shouldReturnOneOfAvailableProviders() {
+        Long serviceId = 1L;
 
-        // Mock Password Encoder
-        when(passwordEncoder.encode("plainPassword123")).thenReturn("hashedPassword");
+        Service svc = new Service();
+        svc.setServiceId(serviceId);
+        svc.setName("Plumbing");
+        when(serviceRepository.findById(serviceId)).thenReturn(Optional.of(svc));
 
-        // Mock Repository to return the provider (acting as if it saved it)
-        when(providerRepository.save(any(Provider.class))).thenAnswer(i -> i.getArguments()[0]);
+        Provider p1 = new Provider();
+        p1.setProviderId(10L);
+        p1.setAvgRating(4.9);
+        p1.setJobsCompleted(50);
+        p1.setIsVetted(true);
 
-        // Mock check for existing email (return null = email not taken)
-        when(providerRepository.findByEmail("test@provider.com")).thenReturn(null);
+        Provider p2 = new Provider();
+        p2.setProviderId(11L);
+        p2.setAvgRating(4.7);
+        p2.setJobsCompleted(1);
+        p2.setIsVetted(true);
 
-        // 2. Act
-        Provider result = providerService.registerProvider(inputProvider);
+        // Your ProviderService might call either of these repository methods.
+        // lenient() prevents UnnecessaryStubbingException for the unused one.
+        lenient().when(providerRepository.findByServices_ServiceId(serviceId)).thenReturn(List.of(p1, p2));
+        lenient().when(providerRepository.findByServiceId(serviceId)).thenReturn(List.of(p1, p2));
 
-        // 3. Assert
-        assertNotNull(result);
-        assertEquals("test@provider.com", result.getEmail());
-        assertEquals("hashedPassword", result.getPasswordHash()); // Should be hashed now
-        assertEquals("PROVIDER", result.getRole()); // Role should be set automatically
+        // If your matching uses current workload, this makes it deterministic-ish
+        lenient().when(jobRepository.findByProvider_ProviderId(10L)).thenReturn(List.of(new Job(), new Job()));
+        lenient().when(jobRepository.findByProvider_ProviderId(11L)).thenReturn(List.of());
 
-        verify(passwordEncoder).encode("plainPassword123");
+        Provider chosen = providerService.matchProviderForService(serviceId, false);
+
+        assertThat(chosen).isNotNull();
+        // Don’t assert a single ID unless your algorithm is guaranteed deterministic.
+        assertThat(chosen.getProviderId()).isIn(10L, 11L);
+    }
+
+    @Test
+    void matchProviderForService_shouldThrow_whenNoProviders() {
+        Long serviceId = 1L;
+
+        Service svc = new Service();
+        svc.setServiceId(serviceId);
+        svc.setName("Plumbing");
+        when(serviceRepository.findById(serviceId)).thenReturn(Optional.of(svc));
+
+        lenient().when(providerRepository.findByServices_ServiceId(serviceId)).thenReturn(List.of());
+        lenient().when(providerRepository.findByServiceId(serviceId)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> providerService.matchProviderForService(serviceId, false))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

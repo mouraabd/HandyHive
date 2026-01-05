@@ -1,38 +1,36 @@
-version: '3.8'
-
 services:
-  # 1. Database Service
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     container_name: handyhive_db
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: handyhive_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 2005
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # 2. Backend Application Service
   app:
-    build: ./HandyHive-Backend
+    build:
+      context: ./HandyHive-Backend
     container_name: handyhive_backend
+    restart: unless-stopped
     ports:
-      - "8082:8082"
+      - "${APP_PORT}:8082"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      # Override application.properties to talk to the 'postgres' container
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/handyhive_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 2005
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
 volumes:

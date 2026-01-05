@@ -7,7 +7,7 @@
 </head>
 <body class="bg-light d-flex align-items-center justify-content-center vh-100">
 
-<div class="card shadow-lg p-4" style="max-width: 500px; width: 100%;">
+<div class="card shadow-lg p-4" style="max-width: 540px; width: 100%;">
     <div class="text-center mb-4">
         <h3 class="fw-bold text-warning">HandyHive</h3>
         <p class="text-muted">Join as a Service Provider</p>
@@ -40,10 +40,19 @@
             <input type="password" id="password" class="form-control" required>
         </div>
 
+        <!-- ✅ Services selection -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Services you provide</label>
+            <div id="servicesBox" class="border rounded p-2 bg-white" style="max-height: 140px; overflow-y: auto;">
+                <div class="text-muted small">Loading services...</div>
+            </div>
+            <div class="form-text">Select at least 1 service (required for customers to find you).</div>
+        </div>
+
         <div class="mb-4">
             <label class="form-label fw-bold">Upload Vetting Document (ID/Certificate)</label>
             <input type="file" id="vettingDoc" class="form-control" accept=".pdf,.jpg,.png">
-            <div class="form-text">Required to get the "Vetted" badge.</div>
+            <div class="form-text">Optional. (You can still register without it.)</div>
         </div>
 
         <button type="submit" class="btn btn-warning w-100 fw-bold">Create Account</button>
@@ -55,16 +64,59 @@
 </div>
 
 <script>
+    const API_BASE = "http://localhost:8082";
+    let loadedServices = [];
+
+    async function loadServices() {
+        const box = document.getElementById("servicesBox");
+        try {
+            const res = await fetch(`${API_BASE}/api/services`);
+            if (!res.ok) throw new Error("Failed /api/services");
+            loadedServices = await res.json();
+
+            if (!Array.isArray(loadedServices) || loadedServices.length === 0) {
+                box.innerHTML = `<div class="text-danger small">No services found in backend.</div>`;
+                return;
+            }
+
+            box.innerHTML = loadedServices.map(s => {
+                const id = s.serviceId ?? s.id;
+                const name = s.name ?? "Service";
+                return `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="serviceIds" value="${id}" id="svc_${id}">
+                        <label class="form-check-label" for="svc_${id}">${name}</label>
+                    </div>
+                `;
+            }).join("");
+
+        } catch (e) {
+            console.error(e);
+            box.innerHTML = `<div class="text-danger small">Cannot load services. Is backend running?</div>`;
+        }
+    }
+
     async function handleRegister(e) {
         e.preventDefault();
 
-        // 1. Prepare FormData (Required for File Uploads)
+        const selected = Array.from(document.querySelectorAll('input[name="serviceIds"]:checked'))
+            .map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert("Please select at least 1 service you provide.");
+            return;
+        }
+
         const formData = new FormData();
         formData.append("firstName", document.getElementById("firstName").value);
         formData.append("lastName", document.getElementById("lastName").value);
         formData.append("email", document.getElementById("email").value);
         formData.append("password", document.getElementById("password").value);
         formData.append("phone", document.getElementById("phone").value);
+        formData.append("bio", "New Service Provider");
+
+        // ✅ IMPORTANT: send repeated serviceIds so Spring binds List<Long>
+        selected.forEach(id => formData.append("serviceIds", id));
 
         const fileInput = document.getElementById("vettingDoc");
         if (fileInput.files.length > 0) {
@@ -72,9 +124,9 @@
         }
 
         try {
-            const response = await fetch("http://localhost:8082/api/providers", {
+            const response = await fetch(`${API_BASE}/api/providers`, {
                 method: "POST",
-                body: formData // No Content-Type header needed, browser sets it for FormData
+                body: formData
             });
 
             if (response.ok) {
@@ -89,6 +141,8 @@
             alert("Server connection error.");
         }
     }
+
+    window.onload = loadServices;
 </script>
 
 </body>

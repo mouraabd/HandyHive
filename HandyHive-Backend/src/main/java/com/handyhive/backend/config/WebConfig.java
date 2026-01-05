@@ -9,10 +9,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Allow CORS for all endpoints
-                .allowedOrigins("http://localhost:63342", "http://127.0.0.1:5500") // Allow IntelliJ & VS Code Live Server
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow these HTTP methods
-                .allowedOriginPatterns("*") // Allow all headers (like Authorization)
-                .allowCredentials(true);
+        registry.addMapping("/**")
+                // ✅ allow any localhost port (IntelliJ 63342, Live Server, etc.)
+                .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("Location")
+                // ✅ IMPORTANT: must be false if using wildcard patterns
+                .allowCredentials(false);
     }
 }

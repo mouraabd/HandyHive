@@ -1,10 +1,14 @@
 package com.handyhive.backend;
 
 import com.handyhive.backend.dto.JobRequestDTO;
-import com.handyhive.backend.model.*;
+import com.handyhive.backend.model.Customer;
+import com.handyhive.backend.model.Job;
+import com.handyhive.backend.model.JobStatus;
+import com.handyhive.backend.model.Provider;
 import com.handyhive.backend.repository.CustomerRepository;
 import com.handyhive.backend.repository.JobRepository;
 import com.handyhive.backend.repository.ProviderRepository;
+import com.handyhive.backend.repository.RatingRepository;
 import com.handyhive.backend.repository.ServiceRepository;
 import com.handyhive.backend.service.JobService;
 import org.junit.jupiter.api.Test;
@@ -13,10 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -35,17 +38,19 @@ public class JobServiceTest {
     @Mock
     private ServiceRepository serviceRepository;
 
+    @Mock
+    private RatingRepository ratingRepository;
+
     @InjectMocks
     private JobService jobService;
 
     @Test
-    public void testCreateJob() {
-        // Arrange
+    void createJob_setsPendingAndServiceName() {
         JobRequestDTO dto = new JobRequestDTO();
         dto.setUserId(1L);
         dto.setProviderId(2L);
         dto.setServiceId(3L);
-        dto.setDescription("Fix leak");
+        dto.setDescription("Fix leaking pipe");
         dto.setIsUrgent(true);
 
         Customer customer = new Customer();
@@ -54,7 +59,6 @@ public class JobServiceTest {
         Provider provider = new Provider();
         provider.setProviderId(2L);
 
-        // ✅ Fix Ambiguity: Fully qualified name
         com.handyhive.backend.model.Service service = new com.handyhive.backend.model.Service();
         service.setServiceId(3L);
         service.setName("Plumbing");
@@ -63,20 +67,20 @@ public class JobServiceTest {
         when(providerRepository.findById(2L)).thenReturn(Optional.of(provider));
         when(serviceRepository.findById(3L)).thenReturn(Optional.of(service));
 
-        Job savedJob = new Job();
-        savedJob.setJobId(100L);
-        // ✅ Fix: Use Enum
-        savedJob.setStatus(JobStatus.PENDING);
-        // ✅ Fix: Use OffsetDateTime
-        savedJob.setDateCreated(OffsetDateTime.now());
+        when(jobRepository.save(any(Job.class))).thenAnswer(inv -> {
+            Job j = inv.getArgument(0);
+            j.setJobId(10L);
+            return j;
+        });
 
-        when(jobRepository.save(any(Job.class))).thenReturn(savedJob);
+        Job created = jobService.createJob(dto);
 
-        // Act
-        Job result = jobService.createJob(dto);
-
-        // Assert
-        assertEquals(JobStatus.PENDING, result.getStatus());
-        assertEquals(100L, result.getJobId());
+        assertNotNull(created);
+        assertEquals(10L, created.getJobId());
+        assertEquals(JobStatus.PENDING, created.getStatus());
+        assertEquals("Plumbing", created.getServiceName());
+        assertTrue(created.getIsUrgent());
+        assertEquals("Fix leaking pipe", created.getDescription());
+        assertNotNull(created.getDateCreated());
     }
 }
