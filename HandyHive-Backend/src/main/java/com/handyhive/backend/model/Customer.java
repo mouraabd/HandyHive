@@ -27,7 +27,6 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @JsonIgnore
     @Column(nullable = false)
     private String passwordHash;
 
