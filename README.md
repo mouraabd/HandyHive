@@ -157,7 +157,7 @@ The backend contains at least one **JPQL query** that goes beyond basic CRUD.
 Example query goal:
 - **Aggregate ratings** for a provider (average score), used in provider recommendations.
 
-**Location:** `RatingRepository.java`  
+**Location:** `ProviderRepository.recommendProvidersForService.java`  
 **Example JPQL:**
 ```java
 @Query("SELECT AVG(r.score) FROM Rating r WHERE r.provider.providerId = :providerId")
