@@ -3,44 +3,24 @@ image: eclipse-temurin:21-jdk-alpine
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  SPRING_PROFILES_ACTIVE: test
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
     - .gradle/
     - HandyHive-Backend/.gradle/
-    - HandyHive-Backend/build/
 
 stages:
   - test
 
 backend-test:
   stage: test
-
-  services:
-    - name: postgres:17-alpine
-      alias: postgres
-
-  variables:
-    POSTGRES_DB: handyhive_test
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: "2005"
-
-    SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/handyhive_test"
-    SPRING_DATASOURCE_USERNAME: "postgres"
-    SPRING_DATASOURCE_PASSWORD: "2005"
-    SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
-
   script:
     - echo "🚀 Starting Pipeline..."
     - cd HandyHive-Backend
-    - apk add --no-cache netcat-openbsd
     - chmod +x gradlew
-    - echo "Waiting for Database..."
-    - while ! nc -z postgres 5432; do sleep 1; done
-    - echo "Database is UP! Running tests..."
-    - ./gradlew test
-
+    - ./gradlew clean test
   artifacts:
     when: always
     reports:
