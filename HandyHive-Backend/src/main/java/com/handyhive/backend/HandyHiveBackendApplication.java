@@ -10,6 +10,4 @@ public class HandyHiveBackendApplication {
         SpringApplication.run(HandyHiveBackendApplication.class, args);
     }
 
-    // ❌ REMOVED the 'resetAllPasswords' bean here because it caused the crash.
-    // If you need data seeding, create a new CommandLineRunner for ProviderRepository/CustomerRepository.
 }

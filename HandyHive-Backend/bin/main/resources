@@ -1,0 +1,53 @@
+-- HANDYHIVE MOCK DATA FOR TESTING CORE LOGIC
+-- Ensures we have data to test the Smart Matching (avg_rating > 4.5) and Vetting logic.
+
+-- 1. Insert Subscription Plans (Must match plan_name from README)
+INSERT INTO subscription (plan_name, price_czk, description) VALUES
+('Standard', 0.00, 'Basic access, no featured listings.'),
+('Monthly Plan', 400.00, 'Enhanced visibility, analytics, and priority job matching.'),
+('Annual Plan', 4000.00, 'Monthly rate equivalent of ~333 CZK with one free featured listing.');
+
+-- 2. Insert Services (Must match the categories from the README)
+-- Note: Service IDs will be 1, 2, 3, 4
+INSERT INTO service (service_name, base_commission_percent) VALUES
+('Plumbing', 15.00),
+('Electrician', 15.00),
+('Handyman', 15.00),
+('Cleaning', 15.00);
+
+-- 3. Insert a Customer (Changed to 'customer' to match the updated User.java @Table mapping!)
+INSERT INTO customer (first_name, last_name, email, password_hash, city)
+VALUES ('Katerina', 'Dvorak', 'k.dvorak@mail.cz', 'hashed_cust_pass', 'Prague');
+
+-- 4. Insert Providers (Provider 1 is high quality, Provider 2 is low quality, Provider 3 is not vetted)
+INSERT INTO provider (first_name, last_name, email, password_hash, avg_rating, jobs_completed, is_vetted, subscription_id)
+VALUES
+(
+    'Miroslav', 'Kovar', 'm.kovar@pro.cz', 'hashed_pro_pass_1',
+    4.9, -- High rating: Eligible for matching
+    65,
+    TRUE,
+    2 -- Monthly Plan
+),
+(
+    'Tomas', 'Janda', 't.janda@pro.cz', 'hashed_pro_pass_2',
+    3.9, -- Low rating: Will be EXCLUDED by the > 4.5 Smart Matching filter (tests Review Trigger logic)
+    10,
+    TRUE,
+    1 -- Standard Plan
+),
+(
+    'Petra', 'Novak', 'p.novak@pro.cz', 'hashed_pro_pass_3',
+    4.5,
+    5,
+    FALSE, -- Not Vetted: Will be EXCLUDED by the vetting filter
+    1
+);
+
+-- 5. Link providers to services (Provider 1, 2, and 3 all offer Plumbing - Service ID 1)
+INSERT INTO provider_service (provider_id, service_id)
+VALUES (1, 1), (2, 1), (3, 1);
+
+-- 6. Insert a Job (Urgent job by Katerina Dvorak for Plumbing)
+INSERT INTO job (user_id, service_id, provider_id, status, description, is_urgent, final_price)
+VALUES (1, 1, 1, 'Pending', 'Leaky faucet in the kitchen.', TRUE, NULL);
