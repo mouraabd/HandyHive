@@ -3,7 +3,7 @@
 ### ==========================================
 
 ### 1. Register Customer (URL is now /api/customers, NOT /register)
-POST http://localhost:8082/api/customers
+POST https://handyhive-api.onrender.com/api/customers
 Content-Type: application/json
 
 {
@@ -15,7 +15,7 @@ Content-Type: application/json
 }
 
 ### 2. Login (Get Token)
-POST http://localhost:8082/api/auth/login
+POST https://handyhive-api.onrender.com/api/auth/login
 Content-Type: application/json
 
 {
@@ -25,7 +25,7 @@ Content-Type: application/json
 
 ### 3. Create Job (URL is now /api/jobs, NOT /create)
 # Replace 'customerId' with the ID you got from step 1
-POST http://localhost:8082/api/jobs
+POST https://handyhive-api.onrender.com/api/jobs
 Content-Type: application/json
 
 {
@@ -42,7 +42,7 @@ Content-Type: application/json
 
 ### TEST A: Duplicate Email (Expect 409 Conflict)
 # Run this immediately after Step 1.
-POST http://localhost:8082/api/customers
+POST https://handyhive-api.onrender.com/api/customers
 Content-Type: application/json
 
 {
@@ -57,11 +57,11 @@ Content-Type: application/json
 
 ### TEST B: Invalid Job Status (Expect 400 Bad Request)
 # Try to set a status that doesn't exist
-PUT http://localhost:8082/api/jobs/1/status?status=INVALID_TEXT
+PUT https://handyhive-api.onrender.com/api/jobs/1/status?status=INVALID_TEXT
 # ✅ PASS if Status is 400
 # ❌ FAIL if Status is 500
 
 ### TEST C: Not Found (Expect 404)
-GET http://localhost:8082/api/jobs/999999
+GET https://handyhive-api.onrender.com/api/jobs/999999
 # ✅ PASS if Status is 404
 # ❌ FAIL if Status is 500

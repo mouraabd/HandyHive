@@ -120,7 +120,7 @@
             : `users/${user.id}`;
 
         try {
-            let res = await fetch(`http://localhost:8082/api/${endpoint}`, {
+            let res = await fetch(`https://handyhive-api.onrender.com/api/${endpoint}`, {
                 headers: { 'Authorization': 'Bearer ' + user.token }
             });
 
@@ -198,7 +198,7 @@
             : `users/${user.id}`;
 
         try {
-            await fetch(`http://localhost:8082/api/${endpoint}`, {
+            await fetch(`https://handyhive-api.onrender.com/api/${endpoint}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + user.token },
                 body: JSON.stringify({ subscriptionId: 1 }) // Set back to Free

@@ -159,8 +159,8 @@
     // --- 1. LOAD DATA ---
     async function loadProfile() {
         const endpoint = user.role === 'PROVIDER'
-            ? `http://localhost:8082/api/providers/${user.id || user.providerId}`
-            : `http://localhost:8082/api/customers/${user.id}`;
+            ? `https://handyhive-api.onrender.com/api/providers/${user.id || user.providerId}`
+            : `https://handyhive-api.onrender.com/api/customers/${user.id}`;
 
         try {
             const res = await fetch(endpoint);
@@ -277,7 +277,7 @@
             phoneNumber: document.getElementById('editPhone').value,
             bio: document.getElementById('editBio').value
         };
-        const endpoint = user.role === 'PROVIDER' ? `http://localhost:8082/api/providers/${user.id}` : `http://localhost:8082/api/customers/${user.id}`;
+        const endpoint = user.role === 'PROVIDER' ? `https://handyhive-api.onrender.com/api/providers/${user.id}` : `https://handyhive-api.onrender.com/api/customers/${user.id}`;
 
         try {
             const res = await fetch(endpoint, {
@@ -295,13 +295,13 @@
 
     async function downgradePlan() {
         if(!confirm("Cancel Subscription?")) return;
-        await fetch(`http://localhost:8082/api/providers/${user.id}/subscription?planId=1`, { method: 'PUT' });
+        await fetch(`https://handyhive-api.onrender.com/api/providers/${user.id}/subscription?planId=1`, { method: 'PUT' });
         location.reload();
     }
 
     async function deleteAccount() {
         if(!confirm("Delete Account? This cannot be undone.")) return;
-        const url = user.role === 'PROVIDER' ? `http://localhost:8082/api/providers/${user.id}` : `http://localhost:8082/api/customers/${user.id}`;
+        const url = user.role === 'PROVIDER' ? `https://handyhive-api.onrender.com/api/providers/${user.id}` : `https://handyhive-api.onrender.com/api/customers/${user.id}`;
         await fetch(url, { method: 'DELETE' });
         logout();
     }

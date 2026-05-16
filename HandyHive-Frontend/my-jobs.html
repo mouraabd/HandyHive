@@ -213,8 +213,8 @@
         document.getElementById('roleBadge').innerText = isProvider ? t.role_provider : t.role_customer;
 
         let url = isProvider
-            ? `http://localhost:8082/api/jobs/provider/${user.id || user.providerId}`
-            : `http://localhost:8082/api/jobs/customer/${user.id}`;
+            ? `https://handyhive-api.onrender.com/api/jobs/provider/${user.id || user.providerId}`
+            : `https://handyhive-api.onrender.com/api/jobs/customer/${user.id}`;
 
         try {
             const response = await fetch(url);
@@ -318,7 +318,7 @@
         if(!confirm(msg)) return;
 
         try {
-            const response = await fetch(`http://localhost:8082/api/jobs/${currentJobId}/status?status=${newStatus}`, { method: 'PUT' });
+            const response = await fetch(`https://handyhive-api.onrender.com/api/jobs/${currentJobId}/status?status=${newStatus}`, { method: 'PUT' });
             if (response.ok) {
                 alert(t.success_update);
                 location.reload();

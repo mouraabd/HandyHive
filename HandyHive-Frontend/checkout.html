@@ -128,7 +128,7 @@
 
             // Logic for JOB Creation
             if (item.type === 'service') {
-                url = "http://localhost:8082/api/jobs";
+                url = "https://handyhive-api.onrender.com/api/jobs";
                 method = "POST";
                 body = {
                     userId: user.id,
@@ -141,7 +141,7 @@
             // Logic for SUBSCRIPTION
             else if (item.type === 'subscription') {
                 const activeId = user.providerId || user.id;
-                url = `http://localhost:8082/api/providers/${activeId}/subscription?planId=${item.id}`;
+                url = `https://handyhive-api.onrender.com/api/providers/${activeId}/subscription?planId=${item.id}`;
                 method = "PUT";
                 body = {};
             }

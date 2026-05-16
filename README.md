@@ -197,8 +197,8 @@ private Set<Service> services = new HashSet<>();
 ## 📡 API Endpoints
 
 ### Swagger / OpenAPI
-- **Swagger UI:** `http://localhost:8082/swagger-ui/index.html`
-- **OpenAPI JSON:** `http://localhost:8082/v3/api-docs`
+- **Swagger UI:** `https://handyhive-api.onrender.com/swagger-ui/index.html`
+- **OpenAPI JSON:** `https://handyhive-api.onrender.com/v3/api-docs`
 
 ### Services (`/api/services`)
 | Method | Endpoint | Description |
@@ -291,8 +291,8 @@ From project root:
 docker compose up -d --build
 ```
 
-**Backend API:** `http://localhost:8082`  
-**Swagger UI:** `http://localhost:8082/swagger-ui/index.html`
+**Backend API:** `https://handyhive-api.onrender.com`  
+**Swagger UI:** `https://handyhive-api.onrender.com/swagger-ui/index.html`
 
 Stop:
 ```bash
@@ -321,7 +321,7 @@ cd HandyHive-Backend
 ./gradlew bootRun
 ```
 
-Backend will run at: `http://localhost:8082`
+Backend will run at: `https://handyhive-api.onrender.com`
 
 ---
 
@@ -341,7 +341,7 @@ python -m http.server 63342
 Then open:
 - `http://localhost:63342`
 
-The client uses the backend REST API at `http://localhost:8082`.
+The client uses the backend REST API at `https://handyhive-api.onrender.com`.
 
 ---
 
@@ -351,12 +351,12 @@ The client uses the backend REST API at `http://localhost:8082`.
 ```powershell
 $payload = @{ name = "Plumbing"; description="Fix pipes"; basePrice=500 } | ConvertTo-Json -Compress
 $payload | Set-Content -NoNewline -Encoding utf8 payload.json
-curl.exe -i -X POST "http://localhost:8082/api/services" -H "Content-Type: application/json" --data-binary "@payload.json"
+curl.exe -i -X POST "https://handyhive-api.onrender.com/api/services" -H "Content-Type: application/json" --data-binary "@payload.json"
 ```
 
 ### Example: Provider registration (multipart)
 ```powershell
-curl.exe -i -X POST "http://localhost:8082/api/providers" `
+curl.exe -i -X POST "https://handyhive-api.onrender.com/api/providers" `
   -F "firstName=John" `
   -F "lastName=Doe" `
   -F "email=john@example.com" `
