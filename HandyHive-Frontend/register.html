@@ -68,7 +68,7 @@
             <div class="form-text small mb-3">Optional for now. You can still register without it.</div>
         </div>
 
-        <button onclick="register()" class="btn btn-brand w-100 mb-3">Register Now</button>
+        <button type="button" onclick="register()" class="btn btn-brand w-100 mb-3">Register Now</button>
 
         <p class="text-center small mb-0">
             Already have an account?
@@ -246,23 +246,21 @@
 
                 res = await fetch(`${API_BASE}/api/providers`, { method: 'POST', body: formData });
             } else {
+                const customerPayload = {
+                    firstName: fname,
+                    lastName: lname,
+                    email: email,
+                    phoneNumber: fullPhone,
+                    password: pass
+                };
+
                 res = await fetch(`${API_BASE}/api/customers`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json;charset=UTF-8',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        firstName: fname,
-                        lastName: lname,
-                        email: email,
-                        phoneNumber: fullPhone,
-
-                        // Send all password field names so it works with both backend versions
-                        passwordHash: pass,
-                        rawPassword: pass,
-                        password: pass
-                    })
+                    body: JSON.stringify(customerPayload)
                 });
             }
 

@@ -1,7 +1,7 @@
 package com.handyhive.backend.controller;
 
+import com.handyhive.backend.dto.CustomerRegisterDTO;
 import com.handyhive.backend.model.Customer;
-import com.handyhive.backend.dto.CustomerUpdateDTO;
 import com.handyhive.backend.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +20,11 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    // ✅ READ (list)
     @GetMapping
     public ResponseEntity<List<Customer>> getAllCustomers() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
-    // ✅ READ (search by email)
     @GetMapping("/search")
     public ResponseEntity<List<Customer>> getCustomerByEmail(@RequestParam String email) {
         return customerService.findByEmail(email)
@@ -34,16 +32,14 @@ public class CustomerController {
                 .orElse(ResponseEntity.ok(List.of()));
     }
 
-    // ✅ READ (by id)
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.getById(id));
     }
 
-    // ✅ CREATE (201 Created + Location)
     @PostMapping
-    public ResponseEntity<Customer> registerCustomer(@RequestBody Customer customer) {
-        Customer saved = customerService.registerCustomer(customer);
+    public ResponseEntity<Customer> registerCustomer(@RequestBody CustomerRegisterDTO request) {
+        Customer saved = customerService.registerCustomer(request);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -54,12 +50,10 @@ public class CustomerController {
         return ResponseEntity.created(location).body(saved);
     }
 
-    // ✅ UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody CustomerUpdateDTO patch) {
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer patch) {
         return ResponseEntity.ok(customerService.updateCustomer(id, patch));
     }
-
 
     @PutMapping("/{id}/password")
     public ResponseEntity<String> changePassword(
@@ -71,7 +65,6 @@ public class CustomerController {
         return ResponseEntity.ok("Password updated successfully!");
     }
 
-    // ✅ DELETE (204 No Content)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
