@@ -46,134 +46,214 @@
 </div>
 
 <script>
+    const API_BASE = "https://handyhive-api.onrender.com";
+
     // --- 1. INPUT FORMATTING LOGIC ---
 
-    // Auto-Space Card Number (0000 0000 0000 0000)
     document.getElementById('cardNumber').addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-        value = value.substring(0, 16); // Limit to 16 digits
-        // Add space every 4 digits
+        let value = e.target.value.replace(/\D/g, '').substring(0, 16);
         e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
     });
 
-    // Auto-Slash Expiry (MM/YY)
     document.getElementById('expiry').addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-        if (value.length >= 2) {
-            e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        } else {
-            e.target.value = value;
-        }
+        let value = e.target.value.replace(/\D/g, '').substring(0, 4);
+        e.target.value = value.length >= 3 ? value.substring(0, 2) + '/' + value.substring(2) : value;
     });
 
-    // --- 2. MULTI-SERVICE CART LOGIC ---
+    document.getElementById('cvv').addEventListener('input', function (e) {
+        e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+    });
+
+    // --- 2. CART STATE ---
 
     let cartItems = [];
     let isSubscription = false;
 
-    // Initialize Page
+    function readCartFromStorage() {
+        try {
+            return JSON.parse(localStorage.getItem('handyhive_cart')) || [];
+        } catch (e) {
+            console.error('Invalid cart in localStorage:', e);
+            localStorage.removeItem('handyhive_cart');
+            return [];
+        }
+    }
+
+    function money(value) {
+        return `${Number(value || 0)} Kč`;
+    }
+
     (function init() {
         const params = new URLSearchParams(window.location.search);
         const type = params.get('type');
 
-        // CASE A: Single Item (From URL)
+        // Single item checkout, mainly used by subscription page.
         if (type === 'service' || type === 'subscription') {
             isSubscription = (type === 'subscription');
             cartItems.push({
-                type: type,
-                id: params.get('id'),
-                price: parseFloat(params.get('price')),
+                type,
+                id: Number(params.get('id')),
+                serviceId: Number(params.get('id')),
+                price: Number(params.get('price') || 0),
                 urgent: params.get('urgent') === 'true',
-                providerId: params.get('providerId'),
-                name: "Selected Service" // Placeholder
+                providerId: params.get('providerId') ? Number(params.get('providerId')) : null,
+                name: type === 'subscription' ? 'Selected Subscription' : 'Selected Service'
+            });
+        } else {
+            cartItems = readCartFromStorage();
+        }
+
+        const list = document.getElementById('orderSummary');
+        if (cartItems.length > 0) {
+            list.classList.remove('d-none');
+            list.innerHTML = '';
+            cartItems.forEach(item => {
+                list.innerHTML += `
+                    <div class="item-row">
+                        <span>${item.name || 'Service'}</span>
+                        <strong>${money(item.price)}</strong>
+                    </div>`;
             });
         }
-        // CASE B: Multiple Items (From LocalStorage "Cart")
-        else {
-            const storedCart = JSON.parse(localStorage.getItem('handyhive_cart')) || [];
-            if(storedCart.length > 0) {
-                cartItems = storedCart;
-                document.getElementById('orderSummary').classList.remove('d-none');
 
-                // Render List
-                const list = document.getElementById('orderSummary');
-                cartItems.forEach(item => {
-                    list.innerHTML += `
-                        <div class="item-row">
-                            <span>${item.name || 'Service'}</span>
-                            <strong>${item.price} Kč</strong>
-                        </div>`;
-                });
-            }
-        }
-
-        // Calculate Total
-        const total = cartItems.reduce((sum, item) => sum + item.price, 0);
-        document.getElementById('totalAmount').innerText = total + " Kč";
+        const total = cartItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
+        document.getElementById('totalAmount').innerText = money(total);
     })();
 
-    // --- 3. PAYMENT PROCESS LOOP ---
+    // --- 3. API HELPERS ---
+
+    async function requestJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const raw = await response.text();
+
+        let data = null;
+        if (raw) {
+            try { data = JSON.parse(raw); }
+            catch { data = raw; }
+        }
+
+        if (!response.ok) {
+            const serverMessage =
+                (data && typeof data === 'object' && (data.message || data.error)) ||
+                (typeof data === 'string' && data) ||
+                `${response.status} ${response.statusText}`;
+            throw new Error(serverMessage);
+        }
+
+        return data;
+    }
+
+    async function findProviderForItem(item) {
+        const serviceId = Number(item.serviceId || item.id);
+        if (!serviceId) throw new Error('Missing serviceId in cart item. Clear the cart and select the service again.');
+
+        const provider = await requestJson(`${API_BASE}/api/providers/match/${serviceId}?urgent=${Boolean(item.urgent)}`);
+        const providerId = Number(provider.providerId || provider.id);
+        if (!providerId) throw new Error('Backend matched a provider, but the response did not contain providerId.');
+
+        return providerId;
+    }
+
+    async function processServiceItem(item, user) {
+        if (user.role !== 'CUSTOMER') {
+            throw new Error('Only customer accounts can buy services. Please log in as a customer account.');
+        }
+
+        const serviceId = Number(item.serviceId || item.id);
+        if (!serviceId) throw new Error('Missing serviceId. Clear the cart and select the service again.');
+
+        let providerId = item.providerId ? Number(item.providerId) : null;
+        if (!providerId) {
+            // Safety fallback for old/stale carts in localStorage.
+            providerId = await findProviderForItem(item);
+        }
+
+        return requestJson(`${API_BASE}/api/jobs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                userId: Number(user.id),
+                providerId,
+                serviceId,
+                isUrgent: Boolean(item.urgent),
+                description: `Booked via Secure Checkout${item.name ? ': ' + item.name : ''}`
+            })
+        });
+    }
+
+    async function processSubscriptionItem(item, user) {
+        if (user.role !== 'PROVIDER') {
+            throw new Error('Only provider accounts can buy subscriptions. Please log in as a provider account.');
+        }
+
+        const providerId = Number(user.providerId || user.id);
+        const planId = Number(item.id);
+        if (!providerId || !planId) throw new Error('Missing providerId or planId for subscription checkout.');
+
+        return requestJson(`${API_BASE}/api/providers/${providerId}/subscription?planId=${planId}`, {
+            method: 'PUT',
+            headers: { 'Accept': 'application/json' }
+        });
+    }
+
+    // --- 4. PAYMENT PROCESS LOOP ---
 
     document.getElementById('paymentForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) { alert("Please log in."); window.location.href = 'login.html'; return; }
+        const button = e.target.querySelector('.btn-pay');
+        const originalButtonText = button.innerText;
+        button.disabled = true;
+        button.innerText = 'Processing...';
 
-        // We process items one by one. If one fails, we stop and alert.
-        let successCount = 0;
-
-        for (const item of cartItems) {
-            let url, method, body;
-
-            // Logic for JOB Creation
-            if (item.type === 'service') {
-                url = "https://handyhive-api.onrender.com/api/jobs";
-                method = "POST";
-                body = {
-                    userId: user.id,
-                    providerId: item.providerId, // ✅ Uses the specific provider for THIS job
-                    serviceId: item.id,
-                    isUrgent: item.urgent || false,
-                    description: "Booked via Secure Checkout"
-                };
-            }
-            // Logic for SUBSCRIPTION
-            else if (item.type === 'subscription') {
-                const activeId = user.providerId || user.id;
-                url = `https://handyhive-api.onrender.com/api/providers/${activeId}/subscription?planId=${item.id}`;
-                method = "PUT";
-                body = {};
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                alert('Please log in.');
+                window.location.href = 'login.html';
+                return;
             }
 
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                if (!response.ok) throw new Error("Server rejected request");
-                successCount++;
-
-            } catch (error) {
-                console.error(error);
-                alert(`Error processing item #${successCount + 1}. Stopping transaction.`);
-                return; // Stop loop on error
+            if (cartItems.length === 0) {
+                alert('Your cart is empty. Please select a service first.');
+                window.location.href = 'services.html';
+                return;
             }
+
+            let successCount = 0;
+
+            for (let i = 0; i < cartItems.length; i++) {
+                const item = cartItems[i];
+                try {
+                    if (item.type === 'service') {
+                        await processServiceItem(item, user);
+                    } else if (item.type === 'subscription') {
+                        await processSubscriptionItem(item, user);
+                    } else {
+                        throw new Error(`Unknown cart item type: ${item.type || 'empty'}`);
+                    }
+                    successCount++;
+                } catch (error) {
+                    console.error('Checkout item failed:', item, error);
+                    alert(`Could not process item #${i + 1}: ${item.name || 'Service'}\n\nReason: ${error.message}`);
+                    return;
+                }
+            }
+
+            alert(`Payment Successful! ${successCount} item(s) processed. ✅`);
+            localStorage.removeItem('handyhive_cart');
+            window.location.href = isSubscription ? 'profile.html' : 'my-jobs.html';
+
+        } catch (error) {
+            console.error('Checkout failed:', error);
+            alert(`Checkout failed: ${error.message}`);
+        } finally {
+            button.disabled = false;
+            button.innerText = originalButtonText;
         }
-
-        // If loop finishes successfully
-        alert(`Payment Successful! ${successCount} items processed. ✅`);
-
-        // Clear Cart
-        localStorage.removeItem('handyhive_cart');
-
-        // Redirect
-        if(isSubscription) window.location.href = 'profile.html';
-        else window.location.href = 'my-jobs.html';
     });
 </script>
+
 
 </body>
 </html>

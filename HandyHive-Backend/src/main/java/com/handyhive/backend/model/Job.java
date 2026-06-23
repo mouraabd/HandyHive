@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import java.time.OffsetDateTime;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

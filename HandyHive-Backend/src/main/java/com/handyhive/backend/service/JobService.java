@@ -40,7 +40,11 @@ public class JobService {
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + id));
     }
 
+    @Transactional
     public Job createJob(JobRequestDTO dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("Job request body is required");
+        }
         Customer customer = customerRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + dto.getUserId()));
 
@@ -55,7 +59,9 @@ public class JobService {
         job.setCustomer(customer);
         job.setProvider(provider);
         job.setServiceName(service.getName());
-        job.setDescription(dto.getDescription());
+        job.setDescription((dto.getDescription() == null || dto.getDescription().isBlank())
+                ? "Booked via Secure Checkout"
+                : dto.getDescription());
         job.setIsUrgent(dto.getIsUrgent() != null ? dto.getIsUrgent() : false);
         job.setStatus(JobStatus.PENDING);
         job.setDateCreated(OffsetDateTime.now());

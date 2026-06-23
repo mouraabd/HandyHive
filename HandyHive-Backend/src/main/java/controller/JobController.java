@@ -1,6 +1,7 @@
 package com.handyhive.backend.controller;
 
 import com.handyhive.backend.dto.JobRequestDTO;
+import jakarta.validation.Valid;
 import com.handyhive.backend.dto.JobUpdateDTO;
 import com.handyhive.backend.model.Job;
 import com.handyhive.backend.service.JobService;
@@ -29,7 +30,7 @@ public class JobController {
 
     // ✅ CREATE (201 Created + Location)
     @PostMapping
-    public ResponseEntity<Job> createJob(@RequestBody JobRequestDTO dto) {
+    public ResponseEntity<Job> createJob(@Valid @RequestBody JobRequestDTO dto) {
         Job saved = jobService.createJob(dto);
 
         URI location = ServletUriComponentsBuilder

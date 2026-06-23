@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -24,13 +26,23 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
     }
 
-    // 400 - validation / illegal arguments
-    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            MethodArgumentNotValidException.class,
+            HttpMessageNotReadableException.class,
+            MissingServletRequestParameterException.class
+    })
     public ResponseEntity<?> handleBadRequest(Exception ex, WebRequest request) {
         String message = ex.getMessage();
+
         if (ex instanceof MethodArgumentNotValidException manv && manv.getBindingResult().getFieldError() != null) {
             message = "Validation failed: " + manv.getBindingResult().getFieldError().getDefaultMessage();
+        } else if (ex instanceof HttpMessageNotReadableException) {
+            message = "Invalid or missing JSON request body.";
+        } else if (ex instanceof MissingServletRequestParameterException missing) {
+            message = "Missing required request parameter: " + missing.getParameterName();
         }
+
         return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", message);
     }
 

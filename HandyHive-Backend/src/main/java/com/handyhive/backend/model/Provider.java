@@ -7,9 +7,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -51,6 +53,6 @@ public class Provider {
     private List<Service> services;
 
     @OneToMany(mappedBy = "provider")
-    @JsonIgnoreProperties("provider")
+    @JsonIgnore
     private List<Job> jobs;
 }

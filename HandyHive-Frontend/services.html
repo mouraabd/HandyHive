@@ -269,10 +269,12 @@
 
                     finalCart.push({
                         type: 'service',
-                        id: item.id, // ✅ real DB serviceId
-                        providerId: provider.providerId,
+                        id: item.id, // kept for compatibility
+                        serviceId: item.id, // real DB serviceId
+                        providerId: provider.providerId || provider.id,
+                        providerName: `${provider.firstName || ''} ${provider.lastName || ''}`.trim(),
                         price: item.price + (isUrgent ? 50 : 0),
-                        name: `${displayName} (${provider.firstName})`,
+                        name: `${displayName} (${provider.firstName || 'provider'})`,
                         urgent: isUrgent
                     });
 
