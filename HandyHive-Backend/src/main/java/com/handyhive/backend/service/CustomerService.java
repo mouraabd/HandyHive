@@ -60,6 +60,7 @@ public class CustomerService {
         if (patch.getFirstName() != null) existing.setFirstName(patch.getFirstName());
         if (patch.getLastName() != null) existing.setLastName(patch.getLastName());
         if (patch.getPhoneNumber() != null) existing.setPhoneNumber(normalizeCzechPhone(patch.getPhoneNumber()));
+        if (patch.getBio() != null) existing.setBio(patch.getBio());
 
         return customerRepository.save(existing);
     }

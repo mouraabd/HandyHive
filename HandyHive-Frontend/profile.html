@@ -3,33 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <title>HandyHive - Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+
     <style>
-        body { background-color: #f0f2f5; }
-        .profile-card { border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .avatar-circle { width: 100px; height: 100px; background-color: #212529; color: #fff; font-size: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px; }
+        body {
+            background-color: #f0f2f5;
+        }
 
-        /* Subscription Bar Styles */
-        .sub-active { border-left: 5px solid #198754; background-color: #f8fff9; }
-        .sub-standard { border-left: 5px solid #ffc107; background-color: #fffbf0; }
+        .profile-card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
 
-        /* Disabled Input Styling */
-        input:disabled, textarea:disabled { background-color: #e9ecef !important; cursor: not-allowed; }
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #212529;
+            color: #fff;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+        }
+
+        .sub-active {
+            border-left: 5px solid #198754;
+            background-color: #f8fff9;
+        }
+
+        .sub-standard {
+            border-left: 5px solid #ffc107;
+            background-color: #fffbf0;
+        }
+
+        input:disabled,
+        textarea:disabled {
+            background-color: #e9ecef !important;
+            cursor: not-allowed;
+        }
     </style>
 </head>
+
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
     <div class="container">
-        <a class="navbar-brand fw-bold text-warning fs-3" href="index.html">HandyHive</a>
+        <a class="navbar-brand fw-bold text-warning fs-3" href="index.html">
+            HandyHive
+        </a>
+
         <div class="d-flex align-items-center gap-3">
-            <select class="form-select form-select-sm border-dark fw-bold" style="width:auto;" id="langSelect" onchange="changeLanguage(this.value)">
+            <select class="form-select form-select-sm border-dark fw-bold"
+                    style="width:auto;"
+                    id="langSelect"
+                    onchange="changeLanguage(this.value)">
                 <option value="en">🇺🇸 EN</option>
                 <option value="cz">🇨🇿 CZ</option>
                 <option value="ar">🇸🇦 AR</option>
             </select>
-            <button onclick="logout()" class="btn btn-outline-dark btn-sm rounded-pill px-3" data-i18n="nav_logout">Log Out</button>
+
+            <button onclick="logout()" class="btn btn-outline-dark btn-sm rounded-pill px-3" data-i18n="nav_logout">
+                Log Out
+            </button>
         </div>
     </div>
 </nav>
@@ -40,14 +82,22 @@
         <div class="col-md-4">
             <div class="card profile-card p-4 text-center h-100">
                 <div class="avatar-circle" id="avatarInitial">U</div>
-                <h4 class="fw-bold mb-1" id="userName">Loading...</h4>
+
+                <h4 class="fw-bold mb-1" id="userName">
+                    Loading...
+                </h4>
 
                 <div class="d-flex justify-content-center gap-2 mb-2">
                     <span class="badge bg-warning text-dark" id="roleBadge">User</span>
-                    <span class="badge bg-success d-none" id="vettedBadge"><i class="bi bi-patch-check-fill"></i> <span data-i18n="vetted_yes">Vetted</span></span>
+
+                    <span class="badge bg-success d-none" id="vettedBadge">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <span data-i18n="vetted_yes">Vetted</span>
+                    </span>
                 </div>
 
                 <p class="text-muted small mb-4" id="userEmail">...</p>
+
                 <hr>
 
                 <div class="row text-center">
@@ -55,6 +105,7 @@
                         <h3 class="fw-bold mb-0" id="statRating">-</h3>
                         <small class="text-muted">Rating</small>
                     </div>
+
                     <div class="col-6">
                         <h3 class="fw-bold mb-0" id="statJobs">0</h3>
                         <small class="text-muted">Jobs</small>
@@ -67,87 +118,156 @@
             <div class="card profile-card p-4">
 
                 <div id="subSection" class="d-none mb-4">
-                    <h5 class="fw-bold text-dark mb-3" data-i18n="header_sub">Subscription</h5>
+                    <h5 class="fw-bold text-dark mb-3" data-i18n="header_sub">
+                        Subscription
+                    </h5>
 
                     <div id="subCard" class="p-3 rounded d-flex justify-content-between align-items-center sub-standard">
                         <div>
-                            <h6 class="fw-bold mb-1 text-uppercase" id="planName">STANDARD PLAN</h6>
-                            <small class="text-muted" id="planDesc">Next Renewal: Never</small>
+                            <h6 class="fw-bold mb-1 text-uppercase" id="planName">
+                                STANDARD PLAN
+                            </h6>
+
+                            <small class="text-muted" id="planDesc">
+                                Next Renewal: Never
+                            </small>
                         </div>
 
                         <div>
-                            <span class="badge bg-success me-2 d-none" id="statusActive" data-i18n="status_active">Active</span>
+                            <span class="badge bg-success me-2 d-none" id="statusActive" data-i18n="status_active">
+                                Active
+                            </span>
 
-                            <button id="btnUpgrade" class="btn btn-dark btn-sm" onclick="window.location.href='subscription.html'" data-i18n="btn_upgrade">Upgrade</button>
+                            <button id="btnUpgrade"
+                                    class="btn btn-dark btn-sm"
+                                    onclick="window.location.href='subscription.html'"
+                                    data-i18n="btn_upgrade">
+                                Upgrade
+                            </button>
 
-                            <button id="btnCancel" class="btn btn-outline-danger btn-sm d-none" onclick="downgradePlan()" data-i18n="btn_cancel_sub">Cancel</button>
+                            <button id="btnCancel"
+                                    class="btn btn-outline-danger btn-sm d-none"
+                                    onclick="downgradePlan()"
+                                    data-i18n="btn_cancel_sub">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <div id="servicesSection" class="d-none mb-4">
-                    <h5 class="fw-bold text-dark mb-3" data-i18n="lbl_myservices">My Services</h5>
+                    <h5 class="fw-bold text-dark mb-3" data-i18n="lbl_myservices">
+                        My Services
+                    </h5>
+
                     <div id="servicesList" class="d-flex gap-2 flex-wrap"></div>
+
                     <hr>
                 </div>
 
-                <h5 class="fw-bold text-dark mb-3" data-i18n="header_details">Personal Details</h5>
+                <h5 class="fw-bold text-dark mb-3" data-i18n="header_details">
+                    Personal Details
+                </h5>
+
                 <form onsubmit="updateProfile(event)">
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small text-muted" data-i18n="lbl_fname">First Name</label>
+                            <label class="form-label small text-muted" data-i18n="lbl_fname">
+                                First Name
+                            </label>
+
                             <input type="text" id="editFname" class="form-control" disabled>
                         </div>
+
                         <div class="col-md-6">
-                            <label class="form-label small text-muted" data-i18n="lbl_lname">Last Name</label>
+                            <label class="form-label small text-muted" data-i18n="lbl_lname">
+                                Last Name
+                            </label>
+
                             <input type="text" id="editLname" class="form-control" disabled>
                         </div>
                     </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small text-muted" data-i18n="lbl_phone">Phone Number</label>
-                            <input type="text" id="editPhone" class="form-control" disabled>
+                            <label class="form-label small text-muted" data-i18n="lbl_phone">
+                                Phone Number
+                            </label>
+
+                            <div class="input-group">
+                                <span class="input-group-text bg-white fw-bold text-muted">+420</span>
+                                <input type="text"
+                                       id="editPhone"
+                                       class="form-control"
+                                       placeholder="777 123 456"
+                                       disabled>
+                            </div>
                         </div>
+
                         <div class="col-md-6">
-                            <label class="form-label small text-muted" data-i18n="lbl_email">Email</label>
+                            <label class="form-label small text-muted" data-i18n="lbl_email">
+                                Email
+                            </label>
+
                             <input type="text" id="editEmail" class="form-control bg-light" disabled>
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label small text-muted" data-i18n="lbl_bio">Bio</label>
+                        <label class="form-label small text-muted" data-i18n="lbl_bio">
+                            Bio
+                        </label>
+
                         <textarea id="editBio" class="form-control" rows="3" disabled></textarea>
                     </div>
 
-                    <h5 class="fw-bold text-dark mb-3" data-i18n="header_settings">Account Settings</h5>
-                    <div class="d-flex justify-content-between">
-                        <div class="d-flex gap-2">
+                    <h5 class="fw-bold text-dark mb-3" data-i18n="header_settings">
+                        Account Settings
+                    </h5>
+
+                    <div class="d-flex justify-content-between flex-wrap gap-3">
+                        <div class="d-flex gap-2 flex-wrap">
                             <button type="button" id="editBtn" class="btn btn-dark" onclick="toggleEditMode()">
-                                <i class="bi bi-pencil-fill me-2"></i> <span data-i18n="btn_edit">Edit Profile</span>
+                                <i class="bi bi-pencil-fill me-2"></i>
+                                <span data-i18n="btn_edit">Edit Profile</span>
                             </button>
-                            <button type="button" id="saveBtn" class="btn btn-success d-none" onclick="updateProfile(event)">
-                                <i class="bi bi-check-lg me-2"></i> <span data-i18n="btn_save">Save Changes</span>
+
+                            <button type="submit" id="saveBtn" class="btn btn-success d-none">
+                                <i class="bi bi-check-lg me-2"></i>
+                                <span data-i18n="btn_save">Save Changes</span>
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                                <i class="bi bi-key me-2"></i> <span data-i18n="btn_pass">Change Password</span>
+
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#changePasswordModal">
+                                <i class="bi bi-key me-2"></i>
+                                <span data-i18n="btn_pass">Change Password</span>
                             </button>
                         </div>
+
                         <button type="button" onclick="deleteAccount()" class="btn btn-danger">
-                            <i class="bi bi-trash-fill me-2"></i> <span data-i18n="btn_delete">Delete</span>
+                            <i class="bi bi-trash-fill me-2"></i>
+                            <span data-i18n="btn_delete">Delete</span>
                         </button>
                     </div>
                 </form>
+
             </div>
         </div>
+
     </div>
 </div>
 
 <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
+
             <div class="modal-header bg-warning">
-                <h5 class="modal-title fw-bold">Change Password</h5>
+                <h5 class="modal-title fw-bold">
+                    Change Password
+                </h5>
+
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -155,179 +275,415 @@
                 <div class="modal-body">
                     <div id="passwordError" class="alert alert-danger d-none"></div>
 
-                    <label class="form-label small text-muted">Current Password</label>
+                    <label class="form-label small text-muted">
+                        Current Password
+                    </label>
+
                     <input type="password" id="oldPassword" class="form-control mb-3" required>
 
-                    <label class="form-label small text-muted">New Password</label>
+                    <label class="form-label small text-muted">
+                        New Password
+                    </label>
+
                     <input type="password" id="newPassword" class="form-control mb-3" minlength="6" required>
 
-                    <label class="form-label small text-muted">Confirm New Password</label>
+                    <label class="form-label small text-muted">
+                        Confirm New Password
+                    </label>
+
                     <input type="password" id="confirmPassword" class="form-control" minlength="6" required>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark">Update Password</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-dark">
+                        Update Password
+                    </button>
                 </div>
             </form>
+
         </div>
     </div>
 </div>
 
 <script src="js/main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    let globalData = null; // Store data to re-render on lang change
+    if (typeof window.showLoading !== 'function') {
+        window.showLoading = function (message = 'Loading...') {
+            let overlay = document.getElementById('hhLoadingOverlay');
 
-    // Listen for language changes from main.js
-    document.addEventListener('langChanged', () => {
-        if(globalData) renderProfile(globalData);
-    });
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'hhLoadingOverlay';
+                overlay.className = 'hh-loading-overlay';
+                overlay.innerHTML = `
+                    <div class="hh-loading-box">
+                        <div class="spinner-border text-warning mb-3" role="status"></div>
+                        <div class="fw-bold" id="hhLoadingText">${message}</div>
+                        <div class="small text-muted mt-1">The free server can take around 50 seconds to wake up.</div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) window.location.href = "login.html";
+            const text = document.getElementById('hhLoadingText');
+            if (text) text.innerText = message;
 
-    // --- 1. LOAD DATA ---
-    async function loadProfile() {
-        const endpoint = user.role === 'PROVIDER'
-            ? `https://handyhive-api.onrender.com/api/providers/${user.id || user.providerId}`
-            : `https://handyhive-api.onrender.com/api/customers/${user.id}`;
-
-        try {
-            const res = await fetch(endpoint);
-            globalData = await res.json();
-            renderProfile(globalData);
-        } catch (e) { console.error(e); }
+            overlay.classList.remove('d-none');
+        };
     }
 
-    // --- 2. RENDER UI ---
+    if (typeof window.hideLoading !== 'function') {
+        window.hideLoading = function () {
+            const overlay = document.getElementById('hhLoadingOverlay');
+            if (overlay) overlay.classList.add('d-none');
+        };
+    }
+
+    if (typeof window.readErrorMessage !== 'function') {
+        window.readErrorMessage = function (data, fallback = 'Request failed') {
+            if (!data) return fallback;
+            if (typeof data === 'string') return data;
+            return data.message || data.error || fallback;
+        };
+    }
+
+    if (typeof window.digitsOnly !== 'function') {
+        window.digitsOnly = function (value) {
+            return String(value || '').replace(/\D/g, '');
+        };
+    }
+
+    if (typeof window.formatCzechPhoneFromDigits !== 'function') {
+        window.formatCzechPhoneFromDigits = function (digits) {
+            const local = digitsOnly(digits).replace(/^420/, '').substring(0, 9);
+            return local.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
+        };
+    }
+
+    if (typeof window.normalizeCzechPhoneInput !== 'function') {
+        window.normalizeCzechPhoneInput = function (value) {
+            const local = digitsOnly(value).replace(/^420/, '');
+
+            if (local.length !== 9) {
+                throw new Error('Phone number must contain exactly 9 digits after +420. Example: 777 123 456');
+            }
+
+            return `+420 ${local.substring(0, 3)} ${local.substring(3, 6)} ${local.substring(6, 9)}`;
+        };
+    }
+
+    if (typeof window.attachCzechPhoneLimiter !== 'function') {
+        window.attachCzechPhoneLimiter = function (inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            input.setAttribute('inputmode', 'numeric');
+            input.setAttribute('maxlength', '11');
+
+            input.addEventListener('input', () => {
+                input.value = formatCzechPhoneFromDigits(input.value);
+            });
+        };
+    }
+
+    if (typeof window.changeLanguage !== 'function') {
+        window.changeLanguage = function (lang) {
+            localStorage.setItem('appLang', lang);
+            document.dispatchEvent(new CustomEvent('langChanged'));
+        };
+    }
+</script>
+
+<script>
+    let globalData = null;
+    const API_BASE = "https://handyhive-api.onrender.com";
+
+    const fallbackTranslations = {
+        en: {
+            role_provider: "Provider",
+            role_customer: "Customer",
+            plan_monthly: "Monthly Plan",
+            plan_annual: "Annual Plan",
+            plan_standard: "Standard Plan",
+            renewal_next: "Next Renewal:",
+            renewal_never: "Next Renewal: Never"
+        }
+    };
+
+    document.addEventListener('langChanged', () => {
+        if (globalData) {
+            renderProfile(globalData);
+        }
+    });
+
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+    if (!user) {
+        window.location.href = "login.html";
+    }
+
+    function profileId() {
+        return user.role === 'PROVIDER'
+            ? user.providerId || user.id
+            : user.id;
+    }
+
+    function profileEndpoint() {
+        return user.role === 'PROVIDER'
+            ? `${API_BASE}/api/providers/${profileId()}`
+            : `${API_BASE}/api/customers/${profileId()}`;
+    }
+
+    async function readResponse(res) {
+        const raw = await res.text();
+
+        if (!raw) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return raw;
+        }
+    }
+
+    async function loadProfile() {
+        try {
+            showLoading('Loading profile... The free server may need around 50 seconds to wake up.');
+
+            const res = await fetch(profileEndpoint(), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await readResponse(res);
+
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, 'Could not load profile.'));
+            }
+
+            globalData = data;
+            renderProfile(globalData);
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message || 'Could not load profile.');
+
+        } finally {
+            hideLoading();
+        }
+    }
+
     function renderProfile(data) {
         const lang = localStorage.getItem('appLang') || 'en';
-        const t = translations[lang];
 
-        // Basic Info
-        document.getElementById('userName').innerText = `${data.firstName} ${data.lastName}`;
-        document.getElementById('avatarInitial').innerText = data.firstName.charAt(0);
-        document.getElementById('userEmail').innerText = data.email;
-        document.getElementById('roleBadge').innerText = user.role === 'PROVIDER' ? t.role_provider : t.role_customer;
+        const translationRoot = typeof translations !== 'undefined'
+            ? translations
+            : fallbackTranslations;
 
-        // Form Fields
-        document.getElementById('editFname').value = data.firstName;
-        document.getElementById('editLname').value = data.lastName;
-        document.getElementById('editEmail').value = data.email;
-        document.getElementById('editPhone').value = data.phoneNumber || "";
-        if(data.bio) document.getElementById('editBio').value = data.bio;
+        const t = translationRoot[lang] || translationRoot.en || fallbackTranslations.en;
 
-        // --- PROVIDER SPECIFIC LOGIC ---
+        const firstName = data.firstName || '';
+        const lastName = data.lastName || '';
+
+        document.getElementById('userName').innerText = `${firstName} ${lastName}`.trim() || 'User';
+        document.getElementById('avatarInitial').innerText = firstName ? firstName.charAt(0).toUpperCase() : 'U';
+        document.getElementById('userEmail').innerText = data.email || user.email || '';
+        document.getElementById('roleBadge').innerText = user.role === 'PROVIDER'
+            ? t.role_provider || 'Provider'
+            : t.role_customer || 'Customer';
+
+        document.getElementById('editFname').value = firstName;
+        document.getElementById('editLname').value = lastName;
+        document.getElementById('editEmail').value = data.email || user.email || '';
+        document.getElementById('editPhone').value = formatCzechPhoneFromDigits(data.phoneNumber || '');
+        document.getElementById('editBio').value = data.bio || '';
+
         if (user.role === 'PROVIDER') {
             document.getElementById('subSection').classList.remove('d-none');
             document.getElementById('servicesSection').classList.remove('d-none');
 
-            document.getElementById('statRating').innerText = data.avgRating ? data.avgRating.toFixed(1) : "0.0";
+            document.getElementById('statRating').innerText = data.avgRating
+                ? Number(data.avgRating).toFixed(1)
+                : "0.0";
 
-            // ✅ FIX: Read directly from DB field (matches your 50 jobs screenshot)
-            // Ensure you added "private Integer jobsCompleted;" to Provider.java
             document.getElementById('statJobs').innerText = data.jobsCompleted || "0";
 
-            // -- SERVICES BADGES --
             const list = document.getElementById('servicesList');
             list.innerHTML = "";
-            const serviceKeyMap = { "Plumbing": "svc_plumbing", "Electrician": "svc_electrician", "Handyman": "svc_handyman", "Deep Cleaning": "svc_cleaning" };
 
-            if(data.services && data.services.length > 0) {
+            const serviceKeyMap = {
+                "Plumbing": "svc_plumbing",
+                "Electrician": "svc_electrician",
+                "Handyman": "svc_handyman",
+                "Deep Cleaning": "svc_cleaning"
+            };
+
+            if (data.services && data.services.length > 0) {
                 data.services.forEach(s => {
                     const key = serviceKeyMap[s.name];
-                    const name = (t && t[key]) ? t[key] : s.name;
+                    const name = t && t[key] ? t[key] : s.name;
+
                     list.innerHTML += `<span class="badge bg-primary fs-6 fw-normal">${name}</span>`;
                 });
             } else {
                 list.innerHTML = `<span class="text-muted small">No services.</span>`;
             }
 
-            // -- SUBSCRIPTION LOGIC --
             const planId = data.subscriptionId || 1;
 
-            if(planId > 1) {
-                // PREMIUM (Monthly or Annual)
-                document.getElementById('planName').innerText = planId == 2 ? t.plan_monthly : t.plan_annual;
+            if (planId > 1) {
+                document.getElementById('planName').innerText = planId == 2
+                    ? t.plan_monthly || 'Monthly Plan'
+                    : t.plan_annual || 'Annual Plan';
+
                 document.getElementById('planName').classList.add("text-success");
 
-                // Calculate Renewal Date
                 const today = new Date();
                 let renewalDate = new Date();
+
                 if (planId == 2) {
-                    renewalDate.setMonth(today.getMonth() + 1); // +1 Month
+                    renewalDate.setMonth(today.getMonth() + 1);
                 } else if (planId == 3) {
-                    renewalDate.setFullYear(today.getFullYear() + 1); // +1 Year
+                    renewalDate.setFullYear(today.getFullYear() + 1);
                 }
 
-                document.getElementById('planDesc').innerText = t.renewal_next + " " + renewalDate.toLocaleDateString();
+                document.getElementById('planDesc').innerText =
+                    `${t.renewal_next || 'Next Renewal:'} ${renewalDate.toLocaleDateString()}`;
+
                 document.getElementById('subCard').classList.replace("sub-standard", "sub-active");
                 document.getElementById('statusActive').classList.remove('d-none');
                 document.getElementById('vettedBadge').classList.remove('d-none');
-
                 document.getElementById('btnUpgrade').classList.add('d-none');
                 document.getElementById('btnCancel').classList.remove('d-none');
-            } else {
-                // FREE
-                document.getElementById('planName').innerText = t.plan_standard;
-                document.getElementById('planDesc').innerText = t.renewal_never;
-                document.getElementById('vettedBadge').classList.add('d-none');
 
+            } else {
+                document.getElementById('planName').innerText = t.plan_standard || 'Standard Plan';
+                document.getElementById('planDesc').innerText = t.renewal_never || 'Next Renewal: Never';
+                document.getElementById('vettedBadge').classList.add('d-none');
                 document.getElementById('btnUpgrade').classList.remove('d-none');
                 document.getElementById('btnCancel').classList.add('d-none');
             }
+
         } else {
-            // Customer View: Hide stats row
-            document.getElementById('statRating').parentElement.parentElement.classList.add('d-none');
+            document.getElementById('subSection').classList.add('d-none');
+            document.getElementById('servicesSection').classList.add('d-none');
+
+            const statsRow = document.getElementById('statRating').parentElement.parentElement;
+            if (statsRow) {
+                statsRow.classList.add('d-none');
+            }
         }
     }
 
-    // --- 3. EDIT MODE TOGGLE ---
+    function setEditMode(enabled) {
+        ['editFname', 'editLname', 'editPhone', 'editBio'].forEach(id => {
+            const input = document.getElementById(id);
+
+            if (input) {
+                input.disabled = !enabled;
+            }
+        });
+
+        document.getElementById('editBtn').classList.toggle('d-none', enabled);
+        document.getElementById('saveBtn').classList.toggle('d-none', !enabled);
+    }
+
     function toggleEditMode() {
-        const inputs = ['editFname', 'editLname', 'editPhone', 'editBio'];
-        const isEditable = !document.getElementById('editFname').disabled;
-
-        inputs.forEach(id => document.getElementById(id).disabled = isEditable);
-
-        if (isEditable) { // Switched to Edit Mode
-            document.getElementById('editBtn').classList.remove('d-none');
-            document.getElementById('saveBtn').classList.add('d-none');
-        } else { // Switched to Save Mode
-            document.getElementById('editBtn').classList.add('d-none');
-            document.getElementById('saveBtn').classList.remove('d-none');
-        }
+        const currentlyDisabled = document.getElementById('editFname').disabled;
+        setEditMode(currentlyDisabled);
     }
 
-    // --- 4. API ACTIONS ---
     async function updateProfile(e) {
         e.preventDefault();
-        const payload = {
-            firstName: document.getElementById('editFname').value,
-            lastName: document.getElementById('editLname').value,
-            phoneNumber: document.getElementById('editPhone').value,
-            bio: document.getElementById('editBio').value
-        };
-        const endpoint = user.role === 'PROVIDER' ? `https://handyhive-api.onrender.com/api/providers/${user.id}` : `https://handyhive-api.onrender.com/api/customers/${user.id}`;
 
         try {
-            const res = await fetch(endpoint, {
+            const firstName = document.getElementById('editFname').value.trim();
+            const lastName = document.getElementById('editLname').value.trim();
+            const phoneNumber = normalizeCzechPhoneInput(document.getElementById('editPhone').value);
+            const bio = document.getElementById('editBio').value.trim();
+
+            if (!firstName || !lastName) {
+                throw new Error('First name and last name are required.');
+            }
+
+            const payload = {
+                firstName,
+                lastName,
+                phoneNumber,
+                bio
+            };
+
+            showLoading('Saving profile...');
+
+            const res = await fetch(profileEndpoint(), {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify(payload)
             });
-            if(res.ok) {
-                alert("Profile saved!");
-                toggleEditMode(); // Lock fields
-                loadProfile(); // Refresh Data
+
+            const data = await readResponse(res);
+
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, 'Profile update failed.'));
             }
-        } catch(e) { console.error(e); }
+
+            globalData = data;
+            renderProfile(globalData);
+            setEditMode(false);
+
+            user.name = `${data.firstName || firstName} ${data.lastName || lastName}`.trim();
+            localStorage.setItem('user', JSON.stringify(user));
+
+            alert('Profile saved successfully.');
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message || 'Profile update failed.');
+
+        } finally {
+            hideLoading();
+        }
     }
 
     async function downgradePlan() {
-        if(!confirm("Cancel Subscription?")) return;
-        await fetch(`https://handyhive-api.onrender.com/api/providers/${user.id}/subscription?planId=1`, { method: 'PUT' });
-        location.reload();
+        if (!confirm("Cancel Subscription?")) {
+            return;
+        }
+
+        try {
+            showLoading('Updating subscription...');
+
+            const res = await fetch(`${API_BASE}/api/providers/${profileId()}/subscription?planId=1`, {
+                method: 'PUT'
+            });
+
+            const data = await readResponse(res);
+
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, 'Could not cancel subscription.'));
+            }
+
+            location.reload();
+
+        } catch (e) {
+            alert(e.message || 'Could not cancel subscription.');
+
+        } finally {
+            hideLoading();
+        }
     }
 
     async function changePassword(e) {
@@ -346,22 +702,20 @@
             return;
         }
 
-        const profileId = user.role === 'PROVIDER' ? (user.providerId || user.id) : user.id;
-
         const base = user.role === 'PROVIDER'
-            ? `https://handyhive-api.onrender.com/api/providers/${profileId}/password`
-            : `https://handyhive-api.onrender.com/api/customers/${profileId}/password`;
+            ? `${API_BASE}/api/providers/${profileId()}/password`
+            : `${API_BASE}/api/customers/${profileId()}/password`;
 
         const url = `${base}?oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`;
 
         try {
             showLoading('Updating password...');
 
-            const res = await fetch(url, { method: 'PUT' });
-            const raw = await res.text();
+            const res = await fetch(url, {
+                method: 'PUT'
+            });
 
-            let data = raw;
-            try { data = raw ? JSON.parse(raw) : null; } catch {}
+            const data = await readResponse(res);
 
             if (!res.ok) {
                 throw new Error(readErrorMessage(data, 'Password update failed.'));
@@ -370,7 +724,10 @@
             alert('Password updated successfully. Please log in again.');
 
             const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
-            if (modal) modal.hide();
+
+            if (modal) {
+                modal.hide();
+            }
 
             logout();
 
@@ -378,28 +735,25 @@
             console.error(err);
             errorBox.innerText = err.message || 'Password update failed.';
             errorBox.classList.remove('d-none');
+
         } finally {
             hideLoading();
         }
     }
 
     async function deleteAccount() {
-        if (!confirm("Delete Account? This cannot be undone.")) return;
-
-        const profileId = user.role === 'PROVIDER' ? (user.providerId || user.id) : user.id;
-
-        const url = user.role === 'PROVIDER'
-            ? `https://handyhive-api.onrender.com/api/providers/${profileId}`
-            : `https://handyhive-api.onrender.com/api/customers/${profileId}`;
+        if (!confirm("Delete Account? This cannot be undone.")) {
+            return;
+        }
 
         try {
             showLoading('Deleting account...');
 
-            const res = await fetch(url, { method: 'DELETE' });
-            const raw = await res.text();
+            const res = await fetch(profileEndpoint(), {
+                method: 'DELETE'
+            });
 
-            let data = raw;
-            try { data = raw ? JSON.parse(raw) : null; } catch {}
+            const data = await readResponse(res);
 
             if (!res.ok) {
                 throw new Error(readErrorMessage(data, 'Delete failed.'));
@@ -411,15 +765,21 @@
         } catch (err) {
             console.error(err);
             alert(`Account was not deleted: ${err.message}`);
+
         } finally {
             hideLoading();
         }
     }
 
-    function logout() { localStorage.removeItem('user'); window.location.href = "login.html"; }
+    function logout() {
+        localStorage.removeItem('user');
+        localStorage.removeItem('handyhive_cart');
+        window.location.href = "login.html";
+    }
 
-    // Initialize
+    attachCzechPhoneLimiter('editPhone');
     loadProfile();
 </script>
+
 </body>
 </html>

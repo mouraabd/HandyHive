@@ -34,9 +34,10 @@ public class Customer {
     private String role;
     private OffsetDateTime registrationDate;
     private Integer subscriptionId;
+    private String bio;
 
     // --- FIX: Prevents Infinite Loop (Customer -> Job -> Customer...) ---
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonIgnore
     private List<Job> jobs;
 }
