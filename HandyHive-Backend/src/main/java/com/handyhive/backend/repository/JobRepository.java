@@ -16,4 +16,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     // ✅ used by smart matching to balance workload (PENDING + IN_PROGRESS)
     long countByProvider_ProviderIdAndStatusIn(Long providerId, Collection<JobStatus> statuses);
+
+    void deleteByCustomer_Id(Long customerId);
+    void deleteByProvider_ProviderId(Long providerId);
 }

@@ -36,8 +36,7 @@ public class Job {
     @JoinColumn(name = "provider_id")
     private Provider provider;
 
-    // ✅ ADD THIS FIELD TO FIX THE ERROR
-    @OneToOne(mappedBy = "job")
-    @JsonIgnoreProperties("job") // Prevents infinite recursion
+    @OneToOne(mappedBy = "job", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonIgnoreProperties("job")
     private Rating rating;
 }

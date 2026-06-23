@@ -129,7 +129,7 @@
                             <button type="button" id="saveBtn" class="btn btn-success d-none" onclick="updateProfile(event)">
                                 <i class="bi bi-check-lg me-2"></i> <span data-i18n="btn_save">Save Changes</span>
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="alert('Demo Feature')">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                                 <i class="bi bi-key me-2"></i> <span data-i18n="btn_pass">Change Password</span>
                             </button>
                         </div>
@@ -139,6 +139,37 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form onsubmit="changePassword(event)">
+                <div class="modal-body">
+                    <div id="passwordError" class="alert alert-danger d-none"></div>
+
+                    <label class="form-label small text-muted">Current Password</label>
+                    <input type="password" id="oldPassword" class="form-control mb-3" required>
+
+                    <label class="form-label small text-muted">New Password</label>
+                    <input type="password" id="newPassword" class="form-control mb-3" minlength="6" required>
+
+                    <label class="form-label small text-muted">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-control" minlength="6" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark">Update Password</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -299,11 +330,90 @@
         location.reload();
     }
 
+    async function changePassword(e) {
+        e.preventDefault();
+
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorBox = document.getElementById('passwordError');
+
+        errorBox.classList.add('d-none');
+
+        if (newPassword !== confirmPassword) {
+            errorBox.innerText = 'New passwords do not match.';
+            errorBox.classList.remove('d-none');
+            return;
+        }
+
+        const profileId = user.role === 'PROVIDER' ? (user.providerId || user.id) : user.id;
+
+        const base = user.role === 'PROVIDER'
+            ? `https://handyhive-api.onrender.com/api/providers/${profileId}/password`
+            : `https://handyhive-api.onrender.com/api/customers/${profileId}/password`;
+
+        const url = `${base}?oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`;
+
+        try {
+            showLoading('Updating password...');
+
+            const res = await fetch(url, { method: 'PUT' });
+            const raw = await res.text();
+
+            let data = raw;
+            try { data = raw ? JSON.parse(raw) : null; } catch {}
+
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, 'Password update failed.'));
+            }
+
+            alert('Password updated successfully. Please log in again.');
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            if (modal) modal.hide();
+
+            logout();
+
+        } catch (err) {
+            console.error(err);
+            errorBox.innerText = err.message || 'Password update failed.';
+            errorBox.classList.remove('d-none');
+        } finally {
+            hideLoading();
+        }
+    }
+
     async function deleteAccount() {
-        if(!confirm("Delete Account? This cannot be undone.")) return;
-        const url = user.role === 'PROVIDER' ? `https://handyhive-api.onrender.com/api/providers/${user.id}` : `https://handyhive-api.onrender.com/api/customers/${user.id}`;
-        await fetch(url, { method: 'DELETE' });
-        logout();
+        if (!confirm("Delete Account? This cannot be undone.")) return;
+
+        const profileId = user.role === 'PROVIDER' ? (user.providerId || user.id) : user.id;
+
+        const url = user.role === 'PROVIDER'
+            ? `https://handyhive-api.onrender.com/api/providers/${profileId}`
+            : `https://handyhive-api.onrender.com/api/customers/${profileId}`;
+
+        try {
+            showLoading('Deleting account...');
+
+            const res = await fetch(url, { method: 'DELETE' });
+            const raw = await res.text();
+
+            let data = raw;
+            try { data = raw ? JSON.parse(raw) : null; } catch {}
+
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, 'Delete failed.'));
+            }
+
+            alert('Your account has been deleted.');
+            logout();
+
+        } catch (err) {
+            console.error(err);
+            alert(`Account was not deleted: ${err.message}`);
+        } finally {
+            hideLoading();
+        }
     }
 
     function logout() { localStorage.removeItem('user'); window.location.href = "login.html"; }

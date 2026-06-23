@@ -143,6 +143,12 @@
 <script src="js/main.js"></script>
 <script>
     const API_BASE = "https://handyhive-api.onrender.com";
+    const currentUserForServices = JSON.parse(localStorage.getItem('user') || 'null');
+
+    if (currentUserForServices?.role === 'PROVIDER') {
+        alert('Provider accounts cannot access the services page or buy services.');
+        window.location.replace('profile.html');
+    }
 
     // selectedServices: Map<serviceId, {id, price, nameKey, englishName}>
     let selectedServices = new Map();

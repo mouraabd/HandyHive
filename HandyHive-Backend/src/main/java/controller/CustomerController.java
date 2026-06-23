@@ -59,6 +59,17 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.updateCustomer(id, patch));
     }
 
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<String> changePassword(
+            @PathVariable Long id,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword
+    ) {
+        customerService.changePassword(id, oldPassword, newPassword);
+        return ResponseEntity.ok("Password updated successfully!");
+    }
+
     // ✅ DELETE (204 No Content)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {

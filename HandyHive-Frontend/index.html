@@ -9,6 +9,12 @@
 </head>
 <body>
 
+<script>
+    if (!localStorage.getItem('user')) {
+        window.location.replace('login.html');
+    }
+</script>
+
 <nav class="navbar navbar-expand-lg navbar-light sticky-top" style="background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <div class="container">
         <a class="navbar-brand fw-bold text-warning" href="index.html">HandyHive</a>
@@ -48,12 +54,9 @@
                 <a href="download-app.html" class="btn btn-outline-dark btn-lg fw-bold" data-i18n="btn_app">Get the App</a>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="bg-gold p-5 rounded-4 text-center d-flex flex-column justify-content-center" style="height: 450px;">
-                <i class="bi bi-hexagon-fill display-1 mb-3 text-dark"></i>
-                <h2 class="fw-800 display-5">HANDYHIVE</h2>
-                <p class="fw-bold ls-2" data-i18n="login_sub">SERVICE PROVIDING APP</p>
-            </div>
+        <div class="bg-gold p-4 rounded-4 text-center d-flex align-items-center justify-content-center" style="height: 450px; overflow: hidden;">
+            <img src="assets/handyhive-logo.png" alt="HandyHive Service Providing App logo" class="img-fluid home-logo" style="max-height: 390px; object-fit: contain;">
+        </div>
         </div>
     </div>
 </div>

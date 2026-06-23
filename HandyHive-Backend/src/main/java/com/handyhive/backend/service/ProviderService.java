@@ -61,6 +61,7 @@ public class ProviderService {
             provider.setVettingDocPath(path.toString());
         }
 
+        provider.setPhoneNumber(normalizeCzechPhone(provider.getPhoneNumber()));
         provider.setPasswordHash(passwordEncoder.encode(provider.getPasswordHash()));
         provider.setRole("PROVIDER");
         if (provider.getSubscriptionId() == null) provider.setSubscriptionId(1);
@@ -89,7 +90,7 @@ public class ProviderService {
         Provider existing = getProviderById(id);
         if (update.getFirstName() != null) existing.setFirstName(update.getFirstName());
         if (update.getLastName() != null) existing.setLastName(update.getLastName());
-        if (update.getPhoneNumber() != null) existing.setPhoneNumber(update.getPhoneNumber());
+        if (update.getPhoneNumber() != null) existing.setPhoneNumber(normalizeCzechPhone(update.getPhoneNumber()));
         if (update.getBio() != null) existing.setBio(update.getBio());
         return providerRepository.save(existing);
     }
@@ -97,6 +98,9 @@ public class ProviderService {
     @Transactional
     public void changePassword(Long id, String oldPassword, String newPassword) {
         Provider provider = getProviderById(id);
+        if (oldPassword == null || newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters.");
+        }
         if (!passwordEncoder.matches(oldPassword, provider.getPasswordHash())) {
             throw new IllegalArgumentException("Incorrect current password");
         }
@@ -115,11 +119,26 @@ public class ProviderService {
         return providerRepository.save(provider);
     }
 
+    @Transactional
     public void deleteProvider(Long id) {
-        if (!providerRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Provider not found with id: " + id);
+        Provider provider = getProviderById(id);
+        jobRepository.deleteAll(jobRepository.findByProvider_ProviderId(id));
+        if (provider.getServices() != null) {
+            provider.getServices().clear();
         }
-        providerRepository.deleteById(id);
+        providerRepository.delete(provider);
+    }
+
+    private String normalizeCzechPhone(String phone) {
+        if (phone == null || phone.isBlank()) {
+            throw new IllegalArgumentException("Phone number is required.");
+        }
+        String digits = phone.replaceAll("\\D", "");
+        if (digits.startsWith("420")) digits = digits.substring(3);
+        if (digits.length() != 9) {
+            throw new IllegalArgumentException("Phone number must contain exactly 9 digits after +420. Example: +420 777 123 456");
+        }
+        return "+420 " + digits.substring(0, 3) + " " + digits.substring(3, 6) + " " + digits.substring(6, 9);
     }
 
     public List<Provider> recommendProvidersForService(Long serviceId) {

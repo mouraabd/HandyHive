@@ -37,7 +37,7 @@
 
     <div class="input-group mb-3">
         <span class="input-group-text bg-white fw-bold text-muted border-end-0">+420</span>
-        <input type="text" id="phone" class="form-control border-start-0" placeholder="777 123 456">
+        <input type="text" id="phone" class="form-control border-start-0" placeholder="777 123 456" inputmode="numeric" maxlength="11">
     </div>
 
     <input type="password" id="pass" class="form-control mb-3" placeholder="Password">
@@ -108,7 +108,7 @@
         const phone = document.getElementById("phone").value.trim();
         const pass = document.getElementById("pass").value;
 
-        const fullPhone = "+420 " + phone;
+        const fullPhone = normalizeCzechPhoneInput(phone);
 
         try {
             document.getElementById('errorAlert').classList.add('d-none');
@@ -208,6 +208,7 @@
     }
 
     window.onload = async () => {
+        attachCzechPhoneLimiter('phone');
         toggleProviderFields();
         await loadServices();
     };

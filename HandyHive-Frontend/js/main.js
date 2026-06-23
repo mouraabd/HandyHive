@@ -346,3 +346,119 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('appLang') || 'en';
     changeLanguage(savedLang);
 });
+
+// --- Global UI helpers: loading overlay, role-based navigation, and phone formatting ---
+const HH_API_BASE = "https://handyhive-api.onrender.com";
+
+function getCurrentUser() {
+    try { return JSON.parse(localStorage.getItem('user')); }
+    catch { return null; }
+}
+
+function isProviderUser() {
+    const user = getCurrentUser();
+    return user && user.role === 'PROVIDER';
+}
+
+function isCustomerUser() {
+    const user = getCurrentUser();
+    return user && user.role === 'CUSTOMER';
+}
+
+function doLogout() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('handyhive_cart');
+    window.location.href = 'login.html';
+}
+
+function ensureLoadingOverlay() {
+    if (document.getElementById('hhLoadingOverlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'hhLoadingOverlay';
+    overlay.className = 'hh-loading-overlay d-none';
+    overlay.innerHTML = `
+        <div class="hh-loading-box">
+            <div class="spinner-border text-warning mb-3" role="status"></div>
+            <div class="fw-bold">Starting HandyHive...</div>
+            <div class="small text-muted mt-1">The free server can take around 50 seconds to wake up.</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function showLoading(message = 'Starting HandyHive...') {
+    ensureLoadingOverlay();
+    const overlay = document.getElementById('hhLoadingOverlay');
+    const title = overlay.querySelector('.fw-bold');
+    if (title) title.innerText = message;
+    overlay.classList.remove('d-none');
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('hhLoadingOverlay');
+    if (overlay) overlay.classList.add('d-none');
+}
+
+function readErrorMessage(data, fallback = 'Request failed') {
+    if (!data) return fallback;
+    if (typeof data === 'string') return data;
+    return data.message || data.error || fallback;
+}
+
+function digitsOnly(value) {
+    return String(value || '').replace(/\D/g, '');
+}
+
+function formatCzechPhoneFromDigits(digits) {
+    const local = digitsOnly(digits).replace(/^420/, '').substring(0, 9);
+    return local.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
+}
+
+function normalizeCzechPhoneInput(value) {
+    const local = digitsOnly(value).replace(/^420/, '');
+
+    if (local.length !== 9) {
+        throw new Error('Phone number must contain exactly 9 digits after +420. Example: 777 123 456');
+    }
+
+    return `+420 ${local.substring(0, 3)} ${local.substring(3, 6)} ${local.substring(6, 9)}`;
+}
+
+function attachCzechPhoneLimiter(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    input.setAttribute('inputmode', 'numeric');
+    input.setAttribute('maxlength', '11');
+
+    input.addEventListener('input', () => {
+        input.value = formatCzechPhoneFromDigits(input.value);
+    });
+}
+
+function applyRoleBasedNavigation() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    if (user.role === 'PROVIDER') {
+        document.querySelectorAll('a[href="services.html"]').forEach(link => {
+            const item = link.closest('li');
+            if (item) item.remove();
+            else link.remove();
+        });
+    }
+}
+
+function blockProviderFromServicesPage() {
+    if (isProviderUser() && window.location.pathname.endsWith('/services.html')) {
+        alert('Provider accounts cannot buy services. Please use your provider profile instead.');
+        window.location.replace('profile.html');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    ensureLoadingOverlay();
+    applyRoleBasedNavigation();
+    blockProviderFromServicesPage();
+});
