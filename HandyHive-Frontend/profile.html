@@ -417,67 +417,84 @@
     };
 
     document.addEventListener('langChanged', () => {
-        if (globalData) {
-            renderProfile(globalData);
-        }
+        if (globalData) renderProfile(globalData);
     });
 
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    let user = JSON.parse(localStorage.getItem('user') || 'null');
 
     if (!user) {
         window.location.href = "login.html";
     }
 
-    function profileId() {
-        return user.role === 'PROVIDER'
-            ? user.providerId || user.id
-            : user.id;
-    }
-
-    function profileEndpoint() {
-        return user.role === 'PROVIDER'
-            ? `${API_BASE}/api/providers/${profileId()}`
-            : `${API_BASE}/api/customers/${profileId()}`;
+    function saveUser() {
+        localStorage.setItem('user', JSON.stringify(user));
     }
 
     async function readResponse(res) {
         const raw = await res.text();
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch { return raw; }
+    }
 
-        if (!raw) {
-            return null;
+    async function resolveLoggedInUserId() {
+        if (!user) return null;
+
+        if (user.role === 'PROVIDER') {
+            if (user.providerId || user.id) return user.providerId || user.id;
+            throw new Error('Provider id is missing from local login data. Please log out and log in again.');
         }
 
-        try {
-            return JSON.parse(raw);
-        } catch {
-            return raw;
+        if (user.id) return user.id;
+
+        if (!user.email) {
+            throw new Error('Customer id is missing from local login data. Please log out and log in again.');
         }
+
+        const res = await fetch(`${API_BASE}/api/customers/search?email=${encodeURIComponent(user.email)}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const data = await readResponse(res);
+
+        if (!res.ok) {
+            throw new Error(readErrorMessage(data, 'Could not resolve customer profile id.'));
+        }
+
+        const customer = Array.isArray(data) ? data[0] : data;
+        if (!customer || !customer.id) {
+            throw new Error('Customer profile was not found for this email.');
+        }
+
+        user.id = customer.id;
+        user.role = 'CUSTOMER';
+        saveUser();
+        return user.id;
+    }
+
+    async function profileEndpoint() {
+        const id = await resolveLoggedInUserId();
+        return user.role === 'PROVIDER'
+            ? `${API_BASE}/api/providers/${id}`
+            : `${API_BASE}/api/customers/${id}`;
     }
 
     async function loadProfile() {
         try {
             showLoading('Loading profile... The free server may need around 50 seconds to wake up.');
 
-            const res = await fetch(profileEndpoint(), {
+            const endpoint = await profileEndpoint();
+            const res = await fetch(endpoint, {
                 method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { 'Accept': 'application/json' }
             });
 
             const data = await readResponse(res);
-
-            if (!res.ok) {
-                throw new Error(readErrorMessage(data, 'Could not load profile.'));
-            }
+            if (!res.ok) throw new Error(readErrorMessage(data, 'Could not load profile.'));
 
             globalData = data;
             renderProfile(globalData);
-
         } catch (e) {
             console.error(e);
             alert(e.message || 'Could not load profile.');
-
         } finally {
             hideLoading();
         }
@@ -485,11 +502,7 @@
 
     function renderProfile(data) {
         const lang = localStorage.getItem('appLang') || 'en';
-
-        const translationRoot = typeof translations !== 'undefined'
-            ? translations
-            : fallbackTranslations;
-
+        const translationRoot = typeof translations !== 'undefined' ? translations : fallbackTranslations;
         const t = translationRoot[lang] || translationRoot.en || fallbackTranslations.en;
 
         const firstName = data.firstName || '';
@@ -508,31 +521,30 @@
         document.getElementById('editPhone').value = formatCzechPhoneFromDigits(data.phoneNumber || '');
         document.getElementById('editBio').value = data.bio || '';
 
+        const statsRow = document.getElementById('statRating').parentElement.parentElement;
+
         if (user.role === 'PROVIDER') {
+            if (statsRow) statsRow.classList.remove('d-none');
             document.getElementById('subSection').classList.remove('d-none');
             document.getElementById('servicesSection').classList.remove('d-none');
 
-            document.getElementById('statRating').innerText = data.avgRating
-                ? Number(data.avgRating).toFixed(1)
-                : "0.0";
-
-            document.getElementById('statJobs').innerText = data.jobsCompleted || "0";
+            document.getElementById('statRating').innerText = data.avgRating ? Number(data.avgRating).toFixed(1) : '0.0';
+            document.getElementById('statJobs').innerText = data.jobsCompleted || '0';
 
             const list = document.getElementById('servicesList');
-            list.innerHTML = "";
+            list.innerHTML = '';
 
             const serviceKeyMap = {
-                "Plumbing": "svc_plumbing",
-                "Electrician": "svc_electrician",
-                "Handyman": "svc_handyman",
-                "Deep Cleaning": "svc_cleaning"
+                'Plumbing': 'svc_plumbing',
+                'Electrician': 'svc_electrician',
+                'Handyman': 'svc_handyman',
+                'Deep Cleaning': 'svc_cleaning'
             };
 
             if (data.services && data.services.length > 0) {
                 data.services.forEach(s => {
                     const key = serviceKeyMap[s.name];
                     const name = t && t[key] ? t[key] : s.name;
-
                     list.innerHTML += `<span class="badge bg-primary fs-6 fw-normal">${name}</span>`;
                 });
             } else {
@@ -540,67 +552,50 @@
             }
 
             const planId = data.subscriptionId || 1;
-
             if (planId > 1) {
-                document.getElementById('planName').innerText = planId == 2
-                    ? t.plan_monthly || 'Monthly Plan'
-                    : t.plan_annual || 'Annual Plan';
-
-                document.getElementById('planName').classList.add("text-success");
+                document.getElementById('planName').innerText = planId == 2 ? (t.plan_monthly || 'Monthly Plan') : (t.plan_annual || 'Annual Plan');
+                document.getElementById('planName').classList.add('text-success');
 
                 const today = new Date();
                 let renewalDate = new Date();
+                if (planId == 2) renewalDate.setMonth(today.getMonth() + 1);
+                else if (planId == 3) renewalDate.setFullYear(today.getFullYear() + 1);
 
-                if (planId == 2) {
-                    renewalDate.setMonth(today.getMonth() + 1);
-                } else if (planId == 3) {
-                    renewalDate.setFullYear(today.getFullYear() + 1);
-                }
-
-                document.getElementById('planDesc').innerText =
-                    `${t.renewal_next || 'Next Renewal:'} ${renewalDate.toLocaleDateString()}`;
-
-                document.getElementById('subCard').classList.replace("sub-standard", "sub-active");
+                document.getElementById('planDesc').innerText = `${t.renewal_next || 'Next Renewal:'} ${renewalDate.toLocaleDateString()}`;
+                document.getElementById('subCard').classList.remove('sub-standard');
+                document.getElementById('subCard').classList.add('sub-active');
                 document.getElementById('statusActive').classList.remove('d-none');
                 document.getElementById('vettedBadge').classList.remove('d-none');
                 document.getElementById('btnUpgrade').classList.add('d-none');
                 document.getElementById('btnCancel').classList.remove('d-none');
-
             } else {
                 document.getElementById('planName').innerText = t.plan_standard || 'Standard Plan';
                 document.getElementById('planDesc').innerText = t.renewal_never || 'Next Renewal: Never';
+                document.getElementById('subCard').classList.remove('sub-active');
+                document.getElementById('subCard').classList.add('sub-standard');
+                document.getElementById('statusActive').classList.add('d-none');
                 document.getElementById('vettedBadge').classList.add('d-none');
                 document.getElementById('btnUpgrade').classList.remove('d-none');
                 document.getElementById('btnCancel').classList.add('d-none');
             }
-
         } else {
             document.getElementById('subSection').classList.add('d-none');
             document.getElementById('servicesSection').classList.add('d-none');
-
-            const statsRow = document.getElementById('statRating').parentElement.parentElement;
-            if (statsRow) {
-                statsRow.classList.add('d-none');
-            }
+            if (statsRow) statsRow.classList.add('d-none');
         }
     }
 
     function setEditMode(enabled) {
         ['editFname', 'editLname', 'editPhone', 'editBio'].forEach(id => {
             const input = document.getElementById(id);
-
-            if (input) {
-                input.disabled = !enabled;
-            }
+            if (input) input.disabled = !enabled;
         });
-
         document.getElementById('editBtn').classList.toggle('d-none', enabled);
         document.getElementById('saveBtn').classList.toggle('d-none', !enabled);
     }
 
     function toggleEditMode() {
-        const currentlyDisabled = document.getElementById('editFname').disabled;
-        setEditMode(currentlyDisabled);
+        setEditMode(document.getElementById('editFname').disabled);
     }
 
     async function updateProfile(e) {
@@ -612,75 +607,51 @@
             const phoneNumber = normalizeCzechPhoneInput(document.getElementById('editPhone').value);
             const bio = document.getElementById('editBio').value.trim();
 
-            if (!firstName || !lastName) {
-                throw new Error('First name and last name are required.');
-            }
+            if (!firstName || !lastName) throw new Error('First name and last name are required.');
 
-            const payload = {
-                firstName,
-                lastName,
-                phoneNumber,
-                bio
-            };
+            const payload = { firstName, lastName, phoneNumber, bio };
 
             showLoading('Saving profile...');
 
-            const res = await fetch(profileEndpoint(), {
+            const endpoint = await profileEndpoint();
+            const res = await fetch(endpoint, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             const data = await readResponse(res);
-
-            if (!res.ok) {
-                throw new Error(readErrorMessage(data, 'Profile update failed.'));
-            }
+            if (!res.ok) throw new Error(readErrorMessage(data, 'Profile update failed.'));
 
             globalData = data;
             renderProfile(globalData);
             setEditMode(false);
 
             user.name = `${data.firstName || firstName} ${data.lastName || lastName}`.trim();
-            localStorage.setItem('user', JSON.stringify(user));
+            user.email = data.email || user.email;
+            saveUser();
 
             alert('Profile saved successfully.');
-
         } catch (e) {
             console.error(e);
             alert(e.message || 'Profile update failed.');
-
         } finally {
             hideLoading();
         }
     }
 
     async function downgradePlan() {
-        if (!confirm("Cancel Subscription?")) {
-            return;
-        }
+        if (!confirm('Cancel Subscription?')) return;
 
         try {
             showLoading('Updating subscription...');
-
-            const res = await fetch(`${API_BASE}/api/providers/${profileId()}/subscription?planId=1`, {
-                method: 'PUT'
-            });
-
+            const id = await resolveLoggedInUserId();
+            const res = await fetch(`${API_BASE}/api/providers/${id}/subscription?planId=1`, { method: 'PUT' });
             const data = await readResponse(res);
-
-            if (!res.ok) {
-                throw new Error(readErrorMessage(data, 'Could not cancel subscription.'));
-            }
-
+            if (!res.ok) throw new Error(readErrorMessage(data, 'Could not cancel subscription.'));
             location.reload();
-
         } catch (e) {
             alert(e.message || 'Could not cancel subscription.');
-
         } finally {
             hideLoading();
         }
@@ -702,70 +673,45 @@
             return;
         }
 
-        const base = user.role === 'PROVIDER'
-            ? `${API_BASE}/api/providers/${profileId()}/password`
-            : `${API_BASE}/api/customers/${profileId()}/password`;
-
-        const url = `${base}?oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`;
-
         try {
             showLoading('Updating password...');
+            const id = await resolveLoggedInUserId();
+            const base = user.role === 'PROVIDER'
+                ? `${API_BASE}/api/providers/${id}/password`
+                : `${API_BASE}/api/customers/${id}/password`;
+            const url = `${base}?oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`;
 
-            const res = await fetch(url, {
-                method: 'PUT'
-            });
-
+            const res = await fetch(url, { method: 'PUT' });
             const data = await readResponse(res);
-
-            if (!res.ok) {
-                throw new Error(readErrorMessage(data, 'Password update failed.'));
-            }
+            if (!res.ok) throw new Error(readErrorMessage(data, 'Password update failed.'));
 
             alert('Password updated successfully. Please log in again.');
-
             const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
-
-            if (modal) {
-                modal.hide();
-            }
-
+            if (modal) modal.hide();
             logout();
-
         } catch (err) {
             console.error(err);
             errorBox.innerText = err.message || 'Password update failed.';
             errorBox.classList.remove('d-none');
-
         } finally {
             hideLoading();
         }
     }
 
     async function deleteAccount() {
-        if (!confirm("Delete Account? This cannot be undone.")) {
-            return;
-        }
+        if (!confirm('Delete Account? This cannot be undone.')) return;
 
         try {
             showLoading('Deleting account...');
-
-            const res = await fetch(profileEndpoint(), {
-                method: 'DELETE'
-            });
-
+            const endpoint = await profileEndpoint();
+            const res = await fetch(endpoint, { method: 'DELETE' });
             const data = await readResponse(res);
-
-            if (!res.ok) {
-                throw new Error(readErrorMessage(data, 'Delete failed.'));
-            }
-
+            if (!res.ok) throw new Error(readErrorMessage(data, 'Delete failed.'));
             alert('Your account has been deleted.');
             logout();
-
         } catch (err) {
             console.error(err);
             alert(`Account was not deleted: ${err.message}`);
-
         } finally {
             hideLoading();
         }
@@ -774,7 +720,7 @@
     function logout() {
         localStorage.removeItem('user');
         localStorage.removeItem('handyhive_cart');
-        window.location.href = "login.html";
+        window.location.href = 'login.html';
     }
 
     attachCzechPhoneLimiter('editPhone');

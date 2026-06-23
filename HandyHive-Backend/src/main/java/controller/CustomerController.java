@@ -1,6 +1,7 @@
 package com.handyhive.backend.controller;
 
 import com.handyhive.backend.model.Customer;
+import com.handyhive.backend.dto.CustomerUpdateDTO;
 import com.handyhive.backend.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,7 +56,7 @@ public class CustomerController {
 
     // ✅ UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer patch) {
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody CustomerUpdateDTO patch) {
         return ResponseEntity.ok(customerService.updateCustomer(id, patch));
     }
 

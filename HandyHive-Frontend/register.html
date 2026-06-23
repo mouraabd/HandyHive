@@ -2,212 +2,310 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>HandyHive - Sign Up</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HandyHive - Home</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="hh-home-page">
+<body class="hh-auth-page">
 
-<script>
-    if (!localStorage.getItem('user')) {
-        window.location.replace('login.html');
-    }
-</script>
-
-<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-warning fs-3" href="index.html">HandyHive</a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-            <ul class="navbar-nav gap-3 align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html" data-i18n="nav_home">Home</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="services.html" data-i18n="nav_services">Services</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="my-jobs.html" data-i18n="nav_jobs">My Jobs</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="profile.html" data-i18n="nav_profile">Profile</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="contact.html" data-i18n="nav_contact">Contact</a>
-                </li>
-
-                <li class="nav-item">
-                    <select class="form-select form-select-sm border-dark" style="width: 76px;" id="langSelect" onchange="changeLanguage(this.value)">
-                        <option value="en">EN</option>
-                        <option value="cz">CZ</option>
-                        <option value="ar">AR</option>
-                    </select>
-                </li>
-            </ul>
-        </div>
-
-        <button class="btn ms-3" data-i18n="btn_logout" style="background-color: #333; color: #fff; border-radius: 20px; padding: 6px 22px;" onclick="doLogout()">
-            Log Out
-        </button>
+<div class="hh-auth-shell">
+    <div class="hh-auth-brand d-none d-lg-flex">
+        <img src="assets/handyhive-logo.png" onerror="this.onerror=null; this.src='assests/handyhive-logo.png';" alt="HandyHive logo">
+        <h1>Join HandyHive</h1>
+        <p>Create a customer account to book help, or join as a provider and receive jobs.</p>
     </div>
-</nav>
 
-<main>
-    <section class="hh-hero-section">
-        <div class="container">
-            <div class="row align-items-center g-5">
+    <div class="card hh-register-card border-0 shadow-lg">
+        <h2 class="text-center fw-bold mb-4">Create Account</h2>
 
-                <div class="col-lg-6">
-                    <div class="hh-hero-badge mb-3">
-                        <i class="bi bi-shield-check me-2"></i>
-                        Prague home services marketplace
-                    </div>
+        <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
 
-                    <h1 class="hh-hero-title mb-4" data-i18n="hero_title">
-                        Find Trusted Service Providers
-                    </h1>
+        <div class="mb-3 text-center">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="roleCustomer" value="customer" checked onchange="toggleProviderFields()">
+                <label class="form-check-label fw-bold" for="roleCustomer">Customer</label>
+            </div>
 
-                    <p class="hh-hero-subtitle mb-4" data-i18n="hero_sub">
-                        Connect with skilled professionals for all your home needs.
-                    </p>
-
-                    <div class="d-flex flex-wrap gap-3 mb-5">
-                        <a href="services.html" id="homeExploreServices" class="btn btn-gold btn-lg px-4" data-i18n="btn_explore">
-                            Explore Services
-                        </a>
-
-                        <a href="my-jobs.html" class="btn btn-outline-dark btn-lg fw-bold px-4">
-                            View My Jobs
-                        </a>
-
-                        <a href="download-app.html" class="btn btn-light btn-lg fw-bold px-4 border" data-i18n="btn_app">
-                            Get the App
-                        </a>
-                    </div>
-
-                    <div class="row g-3 hh-trust-row">
-                        <div class="col-4">
-                            <div class="hh-mini-stat">
-                                <div class="fw-bold fs-4">4+</div>
-                                <small>Service types</small>
-                            </div>
-                        </div>
-
-                        <div class="col-4">
-                            <div class="hh-mini-stat">
-                                <div class="fw-bold fs-4">24/7</div>
-                                <small>Urgent jobs</small>
-                            </div>
-                        </div>
-
-                        <div class="col-4">
-                            <div class="hh-mini-stat">
-                                <div class="fw-bold fs-4">CZK</div>
-                                <small>Local pricing</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="hh-logo-showcase">
-                        <img src="assets/Handyhive-logo.png"
-                             onerror="this.onerror=null; this.src='assets/handyhive-logo.png';"
-                             alt="HandyHive Service Providing App logo"
-                             class="hh-home-logo">
-                    </div>
-                </div>
-
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="roleProvider" value="provider" onchange="toggleProviderFields()">
+                <label class="form-check-label fw-bold" for="roleProvider">Service Provider</label>
             </div>
         </div>
-    </section>
 
-    <section class="container hh-feature-section">
-        <div class="row g-4">
-
-            <div class="col-md-4">
-                <div class="hh-feature-card">
-                    <i class="bi bi-tools"></i>
-                    <h5>Choose a service</h5>
-                    <p>
-                        Select plumbing, cleaning, electrical work, or handyman support from one simple marketplace.
-                    </p>
-                </div>
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <input type="text" id="fname" class="form-control" placeholder="First Name" autocomplete="given-name">
             </div>
-
-            <div class="col-md-4">
-                <div class="hh-feature-card">
-                    <i class="bi bi-person-check"></i>
-                    <h5>Match with a provider</h5>
-                    <p>
-                        HandyHive connects the customer request with a suitable local professional.
-                    </p>
-                </div>
+            <div class="col-6">
+                <input type="text" id="lname" class="form-control" placeholder="Last Name" autocomplete="family-name">
             </div>
-
-            <div class="col-md-4">
-                <div class="hh-feature-card">
-                    <i class="bi bi-credit-card-2-front"></i>
-                    <h5>Checkout securely</h5>
-                    <p>
-                        Customers can confirm multiple services in a cart and create real job requests.
-                    </p>
-                </div>
-            </div>
-
         </div>
-    </section>
-</main>
+
+        <input type="email" id="email" class="form-control mb-3" placeholder="Email Address" autocomplete="email">
+
+        <div class="input-group mb-3">
+            <span class="input-group-text bg-white fw-bold text-muted border-end-0">+420</span>
+            <input type="text" id="phone" class="form-control border-start-0" placeholder="777 123 456" inputmode="numeric" maxlength="11" autocomplete="tel">
+        </div>
+
+        <input type="password" id="pass" class="form-control mb-3" placeholder="Password" autocomplete="new-password">
+
+        <div id="providerFields" class="d-none">
+            <label class="small fw-bold mb-2 text-dark">Select services you provide:</label>
+
+            <div id="servicesContainer" class="mb-3 border rounded p-3 bg-white" style="max-height: 190px; overflow-y: auto;">
+                <div class="d-flex align-items-center gap-2 text-muted small">
+                    <span class="spinner-border spinner-border-sm text-warning"></span>
+                    Loading services...
+                </div>
+            </div>
+
+            <label class="small fw-bold mb-2 text-dark">Upload ID / Certificate:</label>
+            <input type="file" id="vettingDoc" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="form-text small mb-3">Optional for now. You can still register without it.</div>
+        </div>
+
+        <button onclick="register()" class="btn btn-brand w-100 mb-3">Register Now</button>
+
+        <p class="text-center small mb-0">
+            Already have an account?
+            <a href="login.html">Login</a>
+        </p>
+    </div>
+</div>
 
 <script src="js/main.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    if (typeof window.doLogout !== 'function') {
-        window.doLogout = function () {
-            localStorage.removeItem('user');
-            localStorage.removeItem('handyhive_cart');
-            window.location.href = 'login.html';
-        };
+    const API_BASE = "https://handyhive-api.onrender.com";
+    let servicesLoaded = false;
+    let serviceLoadInProgress = false;
+
+    function showError(msg) {
+        const box = document.getElementById('errorAlert');
+        box.innerText = msg;
+        box.classList.remove('d-none');
     }
 
-    if (typeof window.changeLanguage !== 'function') {
-        window.changeLanguage = function (lang) {
-            localStorage.setItem('appLang', lang);
-        };
+    function clearError() {
+        document.getElementById('errorAlert').classList.add('d-none');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const user = typeof getCurrentUser === 'function'
-            ? getCurrentUser()
-            : JSON.parse(localStorage.getItem('user') || 'null');
+    function toggleProviderFields() {
+        const isProvider = document.getElementById('roleProvider').checked;
+        const div = document.getElementById('providerFields');
 
-        if (user && user.role === 'PROVIDER') {
-            const explore = document.getElementById('homeExploreServices');
+        if (isProvider) {
+            div.classList.remove('d-none');
+            if (!servicesLoaded && !serviceLoadInProgress) loadServices();
+        } else {
+            div.classList.add('d-none');
+        }
+    }
 
-            if (explore) {
-                explore.href = 'profile.html';
-                explore.innerText = 'Go to Provider Profile';
+    function renderServiceCheckboxes(list) {
+        const box = document.getElementById('servicesContainer');
+
+        if (!Array.isArray(list) || list.length === 0) {
+            servicesLoaded = false;
+            box.innerHTML = `
+                <div class="alert alert-warning py-2 px-3 mb-2 small">
+                    No services were found in the database. The backend seeder should create default services after redeploy.
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-dark w-100" onclick="loadServices(true)">Retry loading services</button>
+            `;
+            return;
+        }
+
+        servicesLoaded = true;
+        box.innerHTML = list.map(s => {
+            const id = s.serviceId ?? s.id;
+            const name = s.name ?? s.serviceName ?? 'Service';
+            const description = s.description ? `<div class="small text-muted ms-4">${s.description}</div>` : '';
+
+            return `
+                <div class="form-check py-1">
+                    <input class="form-check-input svc-chk" type="checkbox" value="${id}" id="svc_${id}">
+                    <label class="form-check-label fw-semibold" for="svc_${id}">${name}</label>
+                    ${description}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderServicesError(message) {
+        const box = document.getElementById('servicesContainer');
+        servicesLoaded = false;
+        box.innerHTML = `
+            <div class="alert alert-warning py-2 px-3 mb-2 small">
+                ${message}<br>
+                The free Render/Neon server can take around 50 seconds to wake up.
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-dark w-100" onclick="loadServices(true)">Retry loading services</button>
+        `;
+    }
+
+    async function readResponse(res) {
+        const raw = await res.text();
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch { return raw; }
+    }
+
+    async function loadServices(force = false) {
+        if (servicesLoaded && !force) return;
+
+        const box = document.getElementById('servicesContainer');
+        serviceLoadInProgress = true;
+        box.innerHTML = `
+            <div class="d-flex align-items-center gap-2 text-muted small">
+                <span class="spinner-border spinner-border-sm text-warning"></span>
+                Loading services from backend...
+            </div>
+        `;
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+        try {
+            showLoading('Loading services... The free server can take around 50 seconds to wake up.');
+
+            const res = await fetch(`${API_BASE}/api/services`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                signal: controller.signal
+            });
+
+            const data = await readResponse(res);
+
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, `Cannot load services. HTTP ${res.status}`));
             }
 
-            document.querySelectorAll('a[href="services.html"]').forEach(link => {
-                const item = link.closest('li');
-                if (item) item.remove();
-                else link.remove();
-            });
+            renderServiceCheckboxes(data);
+        } catch (e) {
+            console.error('Service loading failed:', e);
+            renderServicesError(e.name === 'AbortError' ? 'Loading services timed out.' : (e.message || 'Cannot load services.'));
+        } finally {
+            clearTimeout(timeoutId);
+            serviceLoadInProgress = false;
+            hideLoading();
         }
-    });
+    }
+
+    async function register() {
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const fname = document.getElementById('fname').value.trim();
+        const lname = document.getElementById('lname').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const pass = document.getElementById('pass').value;
+
+        try {
+            clearError();
+
+            if (!fname || !lname || !email || !phone || !pass) {
+                throw new Error('Please fill all required fields.');
+            }
+
+            if (pass.length < 6) {
+                throw new Error('Password must be at least 6 characters.');
+            }
+
+            const fullPhone = normalizeCzechPhoneInput(phone);
+            let res;
+
+            showLoading('Creating account...');
+
+            if (role === 'provider') {
+                const checked = Array.from(document.querySelectorAll('.svc-chk:checked')).map(cb => cb.value);
+
+                if (!servicesLoaded) {
+                    throw new Error('Services are not loaded yet. Click Retry loading services first.');
+                }
+
+                if (checked.length === 0) {
+                    throw new Error('Please select at least 1 service you provide.');
+                }
+
+                const formData = new FormData();
+                formData.append('firstName', fname);
+                formData.append('lastName', lname);
+                formData.append('email', email);
+                formData.append('password', pass);
+                formData.append('phone', fullPhone);
+                formData.append('bio', 'New Service Provider');
+                checked.forEach(v => formData.append('serviceIds', v));
+                formData.append('serviceIdsCsv', checked.join(','));
+
+                const fileInput = document.getElementById('vettingDoc');
+                if (fileInput.files.length > 0) {
+                    formData.append('document', fileInput.files[0]);
+                }
+
+                res = await fetch(`${API_BASE}/api/providers`, { method: 'POST', body: formData });
+            } else {
+                res = await fetch(`${API_BASE}/api/customers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        firstName: fname,
+                        lastName: lname,
+                        email,
+                        phoneNumber: fullPhone,
+                        passwordHash: pass
+                    })
+                });
+            }
+
+            const data = await readResponse(res);
+            if (!res.ok) {
+                throw new Error(readErrorMessage(data, `Registration failed. HTTP ${res.status}`));
+            }
+
+            const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ email, password: pass })
+            });
+
+            const loginData = await readResponse(loginRes);
+
+            if (loginRes.ok && loginData) {
+                localStorage.setItem('user', JSON.stringify(loginData));
+                localStorage.removeItem('handyhive_cart');
+                window.location.href = loginData.role === 'PROVIDER' ? 'profile.html' : 'index.html';
+            } else {
+                alert('Registered successfully, but auto-login failed. Please log in manually.');
+                window.location.href = 'login.html';
+            }
+        } catch (e) {
+            console.error(e);
+            showError(e.message || 'Registration failed.');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function initRegisterPage() {
+        attachCzechPhoneLimiter('phone');
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('role') === 'provider') {
+            document.getElementById('roleProvider').checked = true;
+        }
+
+        toggleProviderFields();
+        loadServices();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRegisterPage);
+    } else {
+        initRegisterPage();
+    }
 </script>
 
 </body>

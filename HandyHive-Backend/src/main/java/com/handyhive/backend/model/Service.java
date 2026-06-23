@@ -1,11 +1,13 @@
 package com.handyhive.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,6 +18,7 @@ public class Service {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long serviceId;
 
+    @Column(nullable = false)
     private String name;
     private String description;
     private Double basePrice;

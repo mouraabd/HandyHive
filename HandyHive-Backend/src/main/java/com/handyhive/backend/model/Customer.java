@@ -28,6 +28,7 @@ public class Customer {
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String passwordHash;
 
     private String phoneNumber;

@@ -1,5 +1,6 @@
 package com.handyhive.backend.service;
 
+import com.handyhive.backend.dto.CustomerUpdateDTO;
 import com.handyhive.backend.exception.ResourceNotFoundException;
 import com.handyhive.backend.model.Customer;
 import com.handyhive.backend.repository.CustomerRepository;
@@ -54,13 +55,13 @@ public class CustomerService {
     }
 
     @Transactional
-    public Customer updateCustomer(Long id, Customer patch) {
+    public Customer updateCustomer(Long id, CustomerUpdateDTO patch) {
         Customer existing = getById(id);
 
-        if (patch.getFirstName() != null) existing.setFirstName(patch.getFirstName());
-        if (patch.getLastName() != null) existing.setLastName(patch.getLastName());
+        if (patch.getFirstName() != null) existing.setFirstName(patch.getFirstName().trim());
+        if (patch.getLastName() != null) existing.setLastName(patch.getLastName().trim());
         if (patch.getPhoneNumber() != null) existing.setPhoneNumber(normalizeCzechPhone(patch.getPhoneNumber()));
-        if (patch.getBio() != null) existing.setBio(patch.getBio());
+        if (patch.getBio() != null) existing.setBio(patch.getBio().trim());
 
         return customerRepository.save(existing);
     }
