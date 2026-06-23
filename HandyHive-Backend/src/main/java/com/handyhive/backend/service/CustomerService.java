@@ -46,7 +46,18 @@ public class CustomerService {
         }
 
         customer.setPhoneNumber(normalizeCzechPhone(customer.getPhoneNumber()));
-        customer.setPasswordHash(passwordEncoder.encode(customer.getPasswordHash()));
+        String plainPassword = customer.getRawPassword();
+
+        if (plainPassword == null || plainPassword.isBlank()) {
+            plainPassword = customer.getPasswordHash();
+        }
+
+        if (plainPassword == null || plainPassword.isBlank()) {
+            throw new IllegalArgumentException("Password is required.");
+        }
+
+        customer.setPasswordHash(passwordEncoder.encode(plainPassword));
+        customer.setRawPassword(null);
         customer.setRole("CUSTOMER");
         if (customer.getRegistrationDate() == null) customer.setRegistrationDate(OffsetDateTime.now());
         if (customer.getSubscriptionId() == null) customer.setSubscriptionId(1);

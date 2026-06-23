@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -28,8 +29,10 @@ public class Customer {
     private String email;
 
     @Column(nullable = false)
-    @JsonIgnore
     private String passwordHash;
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String rawPassword;
 
     private String phoneNumber;
     private String role;

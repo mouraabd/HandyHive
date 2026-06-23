@@ -14,8 +14,7 @@
 
 <div class="hh-auth-shell">
     <div class="hh-auth-brand d-none d-lg-flex">
-        <img src="assets/handyhive-logo.png" onerror="this.onerror=null; this.src='assests/handyhive-logo.png';" alt="HandyHive logo">
-        <h1>Join HandyHive</h1>
+        <img src="assets/Handyhive-logo.png" onerror="this.onerror=null; this.src='assets/handyhive-logo.png';" alt="HandyHive logo">        <h1>Join HandyHive</h1>
         <p>Create a customer account to book help, or join as a provider and receive jobs.</p>
     </div>
 
@@ -249,13 +248,20 @@
             } else {
                 res = await fetch(`${API_BASE}/api/customers`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         firstName: fname,
                         lastName: lname,
-                        email,
+                        email: email,
                         phoneNumber: fullPhone,
-                        passwordHash: pass
+
+                        // Send all password field names so it works with both backend versions
+                        passwordHash: pass,
+                        rawPassword: pass,
+                        password: pass
                     })
                 });
             }
